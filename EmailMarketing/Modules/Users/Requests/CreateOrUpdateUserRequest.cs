@@ -16,9 +16,13 @@ namespace EmailMarketing.Modules.Users.Requests
     {
     }
 
-    public class UpdateUserRequest : CreateOrUpdateUserRequest
+    public class UpdateUserStatus
     {
         public Status? Status { get; set; }
+    }
+    public class UpdateUserEmail
+    {
+        public string? Email { get; set; }
     }
 
     public class CreateOrUpdateUserRequestValidator : AbstractValidator<CreateOrUpdateUserRequest>
@@ -39,7 +43,10 @@ namespace EmailMarketing.Modules.Users.Requests
                 .Matches("[a-z]").WithMessage("{PropertyName} must contain at least one lowercase letter.")
                 .Matches("[0-9]").WithMessage("{PropertyName} must contain at least one number.")
                 .Matches(@"[""!@$%^&*(){}:;<>,.?/+\-_=|'[\]~\\]").WithMessage("{PropertyName} must contain at least one special character");
-            RuleFor(user => user.RoleId).NotEmpty().WithMessage("{PropertyName} is required");
+            RuleFor(user => user.RoleId).NotEmpty()
+                .NotEqual(0)
+                .WithMessage("{PropertyName} is required")
+                .Must((_, RoleId) => { return repository.Role.FindByCondition(x => x.Id == RoleId).Count() != 0; });
         }
     }
 
@@ -51,11 +58,23 @@ namespace EmailMarketing.Modules.Users.Requests
         }
     }
 
-    public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
+    public class UpdateUserStatusValidator : AbstractValidator<UpdateUserStatus>
     {
-        public UpdateUserRequestValidator(IRepositoryWrapper repository)
+        public UpdateUserStatusValidator()
         {
-            RuleFor(user => user).SetValidator(new CreateOrUpdateUserRequestValidator(repository));
+            RuleFor(user => user.Status).IsInEnum().WithMessage("{PropertyName} doest not exists");
+        }
+    }
+    public class UpdateEmailUserValidator : AbstractValidator<UpdateUserEmail>
+    {
+        public UpdateEmailUserValidator(IRepositoryWrapper repository)
+        {
+            RuleFor(user => user.Email).NotEmpty().WithMessage("{PropertyName} is required")
+              .EmailAddress().WithMessage("{PropertyName} is not valid")
+              .Must((_, email) =>
+              {
+                  return repository.User.FindByCondition(x => x.Email == email).Count() == 0;
+              }).WithMessage("{PropertyName} already exists");
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using EmailMarketing.Modules.Users.Requests;
-using EmailMarketing.Modules.Users.Response;
+﻿using EmailMarketing.Modules.Users.Entities;
+using EmailMarketing.Modules.Users.Requests;
 using EmailMarketing.Modules.Users.Services;
 using Microsoft.AspNetCore.Mvc;
 using ProjectExample.Persistence.PaggingBase;
@@ -27,7 +27,7 @@ namespace EmailMarketing.Controllers
         [HttpGet]
         public IActionResult GetUser([FromQuery] GetUserRequest request)
         {
-            PaggingResponse<UserGetResponse> result = userService.Get(request);
+            PaggingResponse<User> result = userService.Get(request);
             if (result != null)
                 return Ok(result);
             return BadRequest("No user exists in the system");
@@ -36,7 +36,7 @@ namespace EmailMarketing.Controllers
         [HttpGet("{userId}")]
         public IActionResult GetDetail([FromRoute] int userId)
         {
-            UserGetDetailResponse result = userService.GetDetail(userId);
+            User result = userService.GetDetail(userId);
             if (result != null)
                 return Ok(result);
             return BadRequest("User does not exist");
@@ -47,10 +47,16 @@ namespace EmailMarketing.Controllers
             userService.Delete(userId);
             return Ok();
         }
-        [HttpPut("{userId}")]
-        public IActionResult Update([FromRoute] int userId,[FromBody] UpdateUserRequest request)
+        [HttpPut("Status/{userId}")]
+        public IActionResult UpdateStatus([FromRoute] int userId,[FromBody] UpdateUserStatus request)
         {
-            userService.Update(userId, request);
+            userService.UpdateStatus(userId, request);
+            return Ok();
+        } 
+        [HttpPut("Email/{userId}")]
+        public IActionResult UpdateEmail([FromRoute] int userId,[FromBody] UpdateUserEmail request)
+        {
+            userService.UpdateEmail(userId, request);
             return Ok();
         }
     }

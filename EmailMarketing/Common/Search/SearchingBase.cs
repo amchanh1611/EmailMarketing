@@ -33,7 +33,7 @@ namespace ProjectExample.Persistence.SearchBase
                 if (propertyFromSourc.PropertyType != typeof(string))
                     continue;
 
-                querySearchBuilder = querySearchBuilder.Append($"{propertyFromSourc.Name.ToString()}.Contains(\"{propertyFromQuery[1]}\")&&");
+                querySearchBuilder = querySearchBuilder.Append($"{propertyFromSourc.Name.ToString()}.Contains(\"{propertyFromQuery[1]}\")||");
             }
 
             string querySearch = querySearchBuilder.ToString().TrimEnd('&');

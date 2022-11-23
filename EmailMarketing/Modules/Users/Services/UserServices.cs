@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
-using EmailMarketing.Modules.Users.Response;
 using EmailMarketing.Persistences.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using ProjectExample.Persistence.PaggingBase;
 using ProjectExample.Persistence.SearchBase;
 using ProjectExample.Persistence.Sort;
@@ -11,15 +12,16 @@ namespace EmailMarketing.Modules.Users.Services
 {
     public interface IUserServices
     {
-        PaggingResponse<UserGetResponse> Get(GetUserRequest request);
+        PaggingResponse<User> Get(GetUserRequest request);
 
         void Create(CreateUserRequest request);
 
         void Delete(int userId);
 
-        void Update(int userId, UpdateUserRequest request);
+        void UpdateStatus(int userId, UpdateUserStatus request);
+        void UpdateEmail(int userId, UpdateUserEmail request);
 
-        UserGetDetailResponse GetDetail(int userId);
+        User GetDetail(int userId);
     }
 
     public class UserServices : IUserServices
@@ -43,35 +45,40 @@ namespace EmailMarketing.Modules.Users.Services
         public void Delete(int userId)
         {
             User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
-            repository.User.Delete(user);
+            repository.User.Delete(user!);
             repository.Save();
         }
 
-        public PaggingResponse<UserGetResponse> Get(GetUserRequest request)
+        public PaggingResponse<User> Get(GetUserRequest request)
         {
-            IQueryable<User> userQuery = repository.User.FindAll();
+
+            IQueryable<User> userQuery = repository.User.FindAll().Include(x=>x.Role);
 
             userQuery = SearchingBase<User>.ApplySearch(userQuery, request.InfoSearch);
 
             userQuery = SortingBase<User>.ApplySort(userQuery, request.Orderby);
 
-            PaggingResponse<User> user = PaggingBase<User>.ApplyPaging(userQuery, request.Current, request.PageSize);
-
-            List<UserGetResponse> response = mapper.Map<List<User>, List<UserGetResponse>>(user.Data);
-
-            return new PaggingResponse<UserGetResponse>(response, user.PageInfo);
+            return PaggingBase<User>.ApplyPaging(userQuery, request.Current, request.PageSize);
         }
 
-        public UserGetDetailResponse GetDetail(int userId)
+        public User GetDetail(int userId)
         {
-            User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
-            return mapper.Map<User, UserGetDetailResponse>(user);
+            return repository.User.FindByCondition(x => x.Id == userId).Include(x=>x.Role).FirstOrDefault();
+            
         }
 
-        public void Update(int userId, UpdateUserRequest request)
+        public void UpdateEmail(int userId, UpdateUserEmail request)
         {
             User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
-            User userUpdate = mapper.Map<UpdateUserRequest, User>(request,user);
+            User userUpdate = mapper.Map<UpdateUserEmail, User>(request,user);
+            repository.User.Update(userUpdate);
+            repository.Save();
+        }
+
+        public void UpdateStatus(int userId, UpdateUserStatus request)
+        {
+            User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
+            User userUpdate = mapper.Map<UpdateUserStatus, User>(request, user!);
             repository.User.Update(userUpdate);
             repository.Save();
         }

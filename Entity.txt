@@ -1,23 +1,33 @@
-package entityframeworkcore.tools 7.0.0 không hỗ trợ pomelo....mysql 6.
-phải cài gói cũ hơn mới xài được??????
-connectionString???????
-tên field không được thống nhất?????????
-Luc tao user khong co them anh dai dien ngay tai man hinh do??????????
-Tại sao không tách việc thêm khách hàng vào trong Modules khách hàng ??????
-tai sao lai de vai tro mat dinh la nhan vien???????????
-model để null hay không null đều được vì mình đã validate dử liệu đầu vào rồi vậy thì mình nên để null hay không null??????? em ngĩ là không null
-??RoleId Null hay không null vì nó là combobox???????????? roleId để null thì không check notEmty được vì lúc này emty của nó là null thì truyền
-số 0 vẫn k check được?????
-Validation mail không hợp lệ không đủ???? có trường hợp có dấu chấm không không có tên miền đằng sau vẫn không check được
-Có get id ra luôn không???? vì lúc sử client sử dụng sẽ gán trường STT chứ không xài đến Id??? em ngĩ là nên get ra
-Vậy thì khi Sort không nên sort trường STT mới phải??????????? nếu muốn thì truong do phai la id 
-User response nên get ra roleId hay ra role name luôn vì get ra role name thì phải map tay?????? và nên sử dụng Id thay cho name 
-generic class không định nghĩ được extensionMethod??????
-chỉnh sửa lại searching base??????
-sửa lại currentPage?????????
-
-
 User
-Id	NickName(varchar255)	UserName(text)	Password(text)	RoleId	Status(tinyInt)	Avatar(text)
+Id	NickName(varchar255)	UserName(text)	Password(text)	RoleId	Status(tinyInt)	Avatar(text) Type
+
+
+
 Role
-Id	Name	
+Id	Name		Type
+1 	admin		1
+2 	Custommer	2
+3 	Custommer1	2
+
+RolePermission
+RoleId PermissionCode
+1	CreateUser
+1	CreateProject
+1	ViewProject
+2	ViewProject 
+
+Permission
+Code			Name			Type
+CreateUser		Tao nguoi dung moi	1
+CreateProject		Tao du an moi		1
+ViewProject		Xem du an  		1,2 
+
+
+success
+tai khoan nguoi dung
+
+//http dang ki trong program
+RolePermission
+update profile
+//quan li token 
+//bi khoa user
