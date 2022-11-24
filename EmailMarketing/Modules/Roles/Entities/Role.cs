@@ -26,7 +26,8 @@ namespace EmailMarketing.Modules.Roles.Entities
     }
     public enum UserType
     {
-        System = 1,
+        Admin = 1,
+        System,
         Customer
     }
 }

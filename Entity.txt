@@ -22,12 +22,13 @@ CreateUser		Tao nguoi dung moi	1
 CreateProject		Tao du an moi		1
 ViewProject		Xem du an  		1,2 
 
+1 CreateUser
+1 UpdateUser
+1 DeleteUser
+1 ViewUser
 
-success
-tai khoan nguoi dung
+2 ViewUser
 
-//http dang ki trong program
-RolePermission
 update profile
 //quan li token 
 //bi khoa user

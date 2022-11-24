@@ -44,7 +44,7 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.HasKey(x => x.Code);
                 entityBuilder.Property(x => x.Code).HasColumnType("char(25)");
                 entityBuilder.Property(x => x.Name).HasColumnType("varchar(50)");
-                entityBuilder.Property(x => x.UserType).HasColumnType("char(10)");
+                entityBuilder.Property(x => x.UserType).HasColumnType("char(100)");
 
             });
             modelBuilder.Entity<RolePermission>(entityBuilder =>

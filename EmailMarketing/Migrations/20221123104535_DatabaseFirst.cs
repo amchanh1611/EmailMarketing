@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace EmailMarketing.Migrations
 {
-    public partial class AddModelsFirst : Migration
+    public partial class DatabaseFirst : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -86,8 +86,7 @@ namespace EmailMarketing.Migrations
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<sbyte>(type: "tinyint", nullable: false),
                     Avatar = table.Column<string>(type: "text", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    Type = table.Column<sbyte>(type: "tinyint", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {

@@ -17,9 +17,17 @@ namespace EmailMarketing.Mapping
                 .ForMember(dest => dest.Password,src=> src.MapFrom(x => BC.HashPassword(x.Password)));
             CreateMap<UpdateUserStatus, User>();
             CreateMap<UpdateUserEmail, User>();
+            CreateMap<UpdateUserName, User>();
+            CreateMap<UpdateUserPassword, User>()
+                .ForMember(dest=>dest.Password,src=>src.MapFrom(x=>BC.HashPassword(x.NewPassword)));
 
             //Role
             CreateMap<CreateRoleRequest, Role>();
+
+            //Permission
+            CreateMap<CreatePermissionRequest, Permission>()
+                .ForMember(dest => dest.UserType, opt => opt.Ignore());
+            
         }
     }
 }

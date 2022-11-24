@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmailMarketing.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20221123051147_AddModelsFirst")]
-    partial class AddModelsFirst
+    [Migration("20221124085924_EditUserTypePermission")]
+    partial class EditUserTypePermission
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -31,7 +31,7 @@ namespace EmailMarketing.Migrations
 
                     b.Property<string>("UserType")
                         .IsRequired()
-                        .HasColumnType("char(10)");
+                        .HasColumnType("char(100)");
 
                     b.HasKey("Code");
 
@@ -96,9 +96,6 @@ namespace EmailMarketing.Migrations
                         .HasColumnType("int");
 
                     b.Property<sbyte>("Status")
-                        .HasColumnType("tinyint");
-
-                    b.Property<sbyte>("Type")
                         .HasColumnType("tinyint");
 
                     b.HasKey("Id");

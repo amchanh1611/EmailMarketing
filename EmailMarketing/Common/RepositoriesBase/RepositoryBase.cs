@@ -1,7 +1,7 @@
 ﻿using EmailMarketing.Persistences.Context;
 using System.Linq.Expressions;
 
-namespace EmailMarketing.Common.BacsicClass
+namespace EmailMarketing.Common.RepositoriesBase
 {
     public interface IRepositoryBase<T>
     {

@@ -5,9 +5,9 @@ using System.Text;
 
 namespace ProjectExample.Persistence.Sort;
 
-public class SortingBase<T>
+public static class SortingBase
 {
-    public static IQueryable<T> ApplySort(IQueryable<T> sourc, string? infoSortFromQuery)
+    public static IQueryable<T> ApplySort<T>(this IQueryable<T> sourc, string? infoSortFromQuery)
     {
         if (!sourc.Any())
             return sourc;
@@ -25,7 +25,7 @@ public class SortingBase<T>
                 continue;
 
             string propertyNameFromQuery = param.Trim().Split(" ")[0];
-            PropertyInfo propertyFromSourc = propertyInfos.FirstOrDefault(x => x.Name.Equals(propertyNameFromQuery, StringComparison.OrdinalIgnoreCase));
+            PropertyInfo propertyFromSourc = propertyInfos.FirstOrDefault(x => x.Name.Equals(propertyNameFromQuery, StringComparison.OrdinalIgnoreCase))!;
 
             if (propertyFromSourc is null)
                 continue;

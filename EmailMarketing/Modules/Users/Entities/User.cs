@@ -11,12 +11,12 @@ namespace EmailMarketing.Modules.Users.Entities
         [JsonIgnore]
         public string Password { get; set; } = default!;
         public int RoleId { get; set; }
-        public Status Status { get; set; } = Status.Active;
+        public UserStatus Status { get; set; } = UserStatus.Active;
         public string? Avatar { get; set; } 
         public Role? Role { get; set; } 
     }
 
-    public enum Status
+    public enum UserStatus
     {
         Active = 1,
         Lock = 2

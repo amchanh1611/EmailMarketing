@@ -1,4 +1,4 @@
-﻿using EmailMarketing.Common.BacsicClass;
+﻿using EmailMarketing.Common.RepositoriesBase;
 using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Persistences.Context;
@@ -13,10 +13,20 @@ namespace EmailMarketing.Persistences.Repositories
     {
     }
 
+    public interface IPermissionRepository : IRepositoryBase<Permission>
+    {
+    }
+
+    public interface IRolePermissionRepository : IRepositoryBase<RolePermission>
+    {
+    }
+
     public interface IRepositoryWrapper
     {
         IUserRepository User { get; }
         IRoleRepository Role { get; }
+        IRolePermissionRepository RolePermission { get; }
+        IPermissionRepository Permission { get; }
 
         void Save();
     }
@@ -35,10 +45,26 @@ namespace EmailMarketing.Persistences.Repositories
         }
     }
 
+    public class PermissionRepository : RepositoryBase<Permission>, IPermissionRepository
+    {
+        public PermissionRepository(AppDbContext context) : base(context)
+        {
+        }
+    }
+
+    public class RolePermissionRepository : RepositoryBase<RolePermission>, IRolePermissionRepository
+    {
+        public RolePermissionRepository(AppDbContext context) : base(context)
+        {
+        }
+    }
+
     public class RepositoryWrapper : IRepositoryWrapper
     {
         private IUserRepository user;
         private IRoleRepository role;
+        private IRolePermissionRepository rolePermission;
+        private IPermissionRepository permission;
         private readonly AppDbContext context;
 
         public RepositoryWrapper(AppDbContext context)
@@ -50,11 +76,11 @@ namespace EmailMarketing.Persistences.Repositories
         {
             get
             {
-                if (this.user == null)
+                if (user is null)
                 {
-                    this.user = new UserRepository(context);
+                    user = new UserRepository(context);
                 }
-                return this.user;
+                return user;
             }
         }
 
@@ -62,11 +88,35 @@ namespace EmailMarketing.Persistences.Repositories
         {
             get
             {
-                if (this.role == null)
+                if (this.role is null)
                 {
                     this.role = new RoleRepository(context);
                 }
                 return this.role;
+            }
+        }
+
+        public IRolePermissionRepository RolePermission
+        {
+            get
+            {
+                if (rolePermission is null)
+                {
+                    rolePermission = new RolePermissionRepository(context);
+                }
+                return rolePermission;
+            }
+        }
+
+        public IPermissionRepository Permission
+        {
+            get
+            {
+                if(permission is null)
+                {
+                    permission = new PermissionRepository(context);
+                }
+                return permission;
             }
         }
 

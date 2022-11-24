@@ -4,9 +4,9 @@ using System.Text;
 
 namespace ProjectExample.Persistence.SearchBase
 {
-    public class SearchingBase<T>
+    public static class SearchingBase
     {
-        public static IQueryable<T> ApplySearch(IQueryable<T> sourc, string infoSearchFromQuery)
+        public static IQueryable<T> ApplySearch<T>(this IQueryable<T> sourc, string infoSearchFromQuery)
         {
             if (!sourc.Any())
                 return sourc;
@@ -25,7 +25,7 @@ namespace ProjectExample.Persistence.SearchBase
 
                 string[] propertyFromQuery = param.Trim().Split(' ');
                 PropertyInfo propertyFromSourc = propertyInfos.FirstOrDefault(x => x.Name.Equals(propertyFromQuery[0],
-                    StringComparison.OrdinalIgnoreCase));
+                    StringComparison.OrdinalIgnoreCase))!;
 
                 if (propertyFromSourc is null)
                     continue;
