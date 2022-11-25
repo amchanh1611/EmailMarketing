@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Text;
 
-namespace ProjectExample.Persistence.SearchBase
+namespace EmailMarketing.Common.Search
 {
     public static class SearchingBase
     {

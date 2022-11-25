@@ -1,11 +1,10 @@
-﻿using EmailMarketing.Common.Jwt;
-using EmailMarketing.Common.JWT;
+﻿using EmailMarketing.Common.JWT;
+using EmailMarketing.Common.Pagination;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
 using EmailMarketing.Modules.Users.Services;
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ProjectExample.Persistence.PaggingBase;
 using System.Security.Claims;
 
 namespace EmailMarketing.Controllers
@@ -76,8 +75,8 @@ namespace EmailMarketing.Controllers
                 return Ok(token);
             return BadRequest("Incorrect Email/Password");
         }
-        [Authorize]
-        [HttpPut("Profile/Name")]
+        
+        [HttpPut("Profile/Name"),Authorize]
         public IActionResult UpdateProfileName([FromBody] UpdateUserName request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);

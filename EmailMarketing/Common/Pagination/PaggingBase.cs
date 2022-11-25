@@ -1,4 +1,4 @@
-﻿namespace ProjectExample.Persistence.PaggingBase
+﻿namespace EmailMarketing.Common.Pagination
 {
     public static class PaggingBase
     {
@@ -7,7 +7,7 @@
             int count = source.Count();
             PageInfo pageInfo = new PageInfo(count, pageSize, current);
             List<T> items = source.Skip((pageInfo.Current - 1) * pageSize).Take(pageSize).ToList();
-            return new PaggingResponse<T>(items,pageInfo);
+            return new PaggingResponse<T>(items, pageInfo);
         }
     }
 
@@ -18,7 +18,7 @@
             TotalCount = totalCount;
             PageSize = pageSize;
             TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-            Current = current > TotalPages ? TotalPages : current; 
+            Current = current > TotalPages ? TotalPages : current;
         }
 
         public int TotalCount { get; private set; }

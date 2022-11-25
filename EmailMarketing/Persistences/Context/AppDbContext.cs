@@ -26,6 +26,8 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.Property(x => x.Password).HasColumnType("text");
                 entityBuilder.Property(x => x.Status).HasColumnType("tinyint");
                 entityBuilder.Property(x => x.Avatar).HasColumnType("text");
+                entityBuilder.Property(x => x.Male).HasColumnType("tinyint");
+                entityBuilder.Property(x => x.Phone).HasColumnType("char(11)");
                 entityBuilder.HasOne(x => x.Role)
                 .WithMany(x => x.Users)
                 .HasForeignKey(x => x.RoleId);
@@ -45,6 +47,7 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.Property(x => x.Code).HasColumnType("char(25)");
                 entityBuilder.Property(x => x.Name).HasColumnType("varchar(50)");
                 entityBuilder.Property(x => x.UserType).HasColumnType("char(100)");
+                entityBuilder.Property(x => x.Modules).HasColumnType("text");
 
             });
             modelBuilder.Entity<RolePermission>(entityBuilder =>

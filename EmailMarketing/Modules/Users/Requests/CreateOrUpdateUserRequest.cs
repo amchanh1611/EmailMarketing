@@ -9,6 +9,8 @@ namespace EmailMarketing.Modules.Users.Requests
         public string? Email { get; set; }
         public string? Name { get; set; }
         public string? Password { get; set; }
+        public string? Phone { get; set; }
+        public Male? Male { get; set; }
         public int? RoleId { get; set; }
     }
 
@@ -89,7 +91,7 @@ namespace EmailMarketing.Modules.Users.Requests
                   string[] arrPath = httpContextAccessor.HttpContext!.Request.Path.ToString().Split("/");
                   //string userId = arrPath[arrPath.Length-1];
                   return repository.User.FindByCondition(x =>
-                  x.Email == email.Trim(' ') 
+                  x.Email == email.Trim() 
                   &&
                   x.Id!=int.Parse(arrPath[arrPath.Length-1])).Count() == 0;
               }).WithMessage("{PropertyName} already exists");

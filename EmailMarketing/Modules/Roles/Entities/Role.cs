@@ -15,6 +15,7 @@ namespace EmailMarketing.Modules.Roles.Entities
         public string Code { get; set; } = default!;
         public string Name { set; get; } = default!;
         public string UserType { get; set; } = default!;
+        public string Modules { get; set; } = default!;
         public ICollection<RolePermission> RolePermissions { get; set; } = default!;
     }
     public class RolePermission

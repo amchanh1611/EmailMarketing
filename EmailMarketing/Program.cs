@@ -1,7 +1,7 @@
 using EmailMarketing.AppSetting;
-using EmailMarketing.Common.Jwt;
 using EmailMarketing.Common.JWT;
 using EmailMarketing.Mapping;
+using EmailMarketing.Middleware;
 using EmailMarketing.Modules.Roles.Services;
 using EmailMarketing.Modules.Users.Services;
 using EmailMarketing.Persistences.Context;
@@ -82,7 +82,9 @@ if (app.Environment.IsDevelopment())
 
 //Use JwtBearer
 app.UseAuthentication();
-app.UseAuthorization();
+
+//ErorHanldeMiddleware
+app.UseMiddleware<ErrorResponseMiddleware>();
 
 //JwtMiddleware
 app.UseMiddleware<JwtMiddleware>();
@@ -90,6 +92,9 @@ app.UseMiddleware<JwtMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+//StaticFile
+app.UseStaticFiles();
 
 app.MapControllers();
 

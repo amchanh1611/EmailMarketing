@@ -1,29 +1,20 @@
-update name
-update status
-update pass phai de bool de check mat khau cu co dung khong
-update avatar
-update email
-httpcontext trong validator
+handle response in middleware .net
 
-validate cho createRole????????
+gộp update user lại
 
-Login validate UserLogin hay khong????? nen
 
-Copy file, NameSpace dự án cũ không đổi????? co nen doi lai khong ?????? khong doi cung khong sao
 
-tai sao tren url cua user profile khong co id???????? la do client muon hien thi hay khong
+{
+  "name": "Nhân Viên - Sale",
+  "userType": 2,
+  "permissionCode": [
+    "ViewAccount","View"
+  ]
+}
 
-Nếu mà chia ra update từng cái thì không kế thừa được validator????? phải chấp nhận
+xóa dự án nhớ check đã có dữ liệu gửi mail chưa  (để sau)
 
-Muốn lấy được userId từ htttpcontext
-truyền from route thì phải xài cắt chuỗi cái path của request nếu vậy thì thiếu linh động vì mình phải tùy biến theo từng request, path có độ dài 
-khác nhau????????????????????
 
-trong bài này có nhất thiết phải kiểm tra email đã tồn tại trong hệ thống và loại trừ mình ra không??????????? em thấy cũng không cần thiếtphâ
- 
-
-Phân quyền nhân viên chỉ được quyền xem user 
-Phải thêm 1 UserType nửa mới hợp lí
-phải tách khác hàng ra làm một module riêng
-
- 
+dự án đã bắt dầu không được xóa   
+Bỏ loại dự án
+them ngày bđ kt

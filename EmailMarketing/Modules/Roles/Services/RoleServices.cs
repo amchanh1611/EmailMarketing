@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
+using EmailMarketing.Common.Pagination;
+using EmailMarketing.Common.Search;
+using EmailMarketing.Common.Sort;
 using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.Roles.Requests;
 using EmailMarketing.Persistences.Repositories;
+using Microsoft.EntityFrameworkCore;
 using System.Text;
 
 namespace EmailMarketing.Modules.Roles.Services
@@ -10,6 +14,7 @@ namespace EmailMarketing.Modules.Roles.Services
     {
         void Create(CreateRoleRequest request);
         void CreatePermission(CreatePermissionRequest request);
+        PaggingResponse<Role> Get(GetRoleRequest request);
         List<Permission> GetPermission(UserType userType);
     }
     public class RoleServices : IRoleServices
@@ -49,9 +54,29 @@ namespace EmailMarketing.Modules.Roles.Services
             repository.Save();
         }
 
+        public PaggingResponse<Role> Get(GetRoleRequest request)
+        {
+            return repository.Role.FindAll()
+                .Include(x => x.RolePermissions)
+                .ApplySearch(request.InfoSearch!)
+                .ApplySort(request.Orderby)
+                .ApplyPaging(request.Current, request.PageSize);
+        }
+
         public List<Permission> GetPermission(UserType userType)
         {
-            return repository.Permission.FindByCondition(x => x.UserType.Contains(userType.ToString())).ToList();
+            var a = repository.Permission
+                .FindByCondition(x => x.UserType.Contains(userType.ToString()))
+                .GroupBy(
+                x=>x.Modules
+                ,x=>x.Code
+                ,(key, g) => new {Modules = key,Code=g.ToList()}).ToList(); 
+            //return repository.Permission
+            //    .FindByCondition(x => x.UserType.Contains(userType.ToString()))
+            //    .GroupBy(
+            //    x=>x.Modules
+            //    ,x=>x.Code
+            //    ,(key, g) => new {Modules = key,Code=g.ToList()}).ToList();
         }
     }
 }

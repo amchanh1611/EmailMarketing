@@ -3,7 +3,7 @@ using System.Linq.Dynamic.Core;
 using System.Reflection;
 using System.Text;
 
-namespace ProjectExample.Persistence.Sort;
+namespace EmailMarketing.Common.Sort;
 
 public static class SortingBase
 {

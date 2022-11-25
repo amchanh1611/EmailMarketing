@@ -1,13 +1,13 @@
 ﻿using AutoMapper;
+using EmailMarketing.Common.Extensions;
 using EmailMarketing.Common.JWT;
+using EmailMarketing.Common.Pagination;
+using EmailMarketing.Common.Search;
+using EmailMarketing.Common.Sort;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
 using EmailMarketing.Persistences.Repositories;
 using Microsoft.EntityFrameworkCore;
-using ProjectExample.Common.Extentions;
-using ProjectExample.Persistence.PaggingBase;
-using ProjectExample.Persistence.SearchBase;
-using ProjectExample.Persistence.Sort;
 using BC = BCrypt.Net.BCrypt;
 
 namespace EmailMarketing.Modules.Users.Services
@@ -64,9 +64,11 @@ namespace EmailMarketing.Modules.Users.Services
 
         public PaggingResponse<User> Get(GetUserRequest request)
         {
-            IQueryable<User> userQuery = repository.User.FindAll().Include(x => x.Role).ThenInclude(x=>x.RolePermissions);
-
-            return userQuery.ApplySearch(request.InfoSearch!).ApplySort(request.Orderby!).ApplyPaging(request.Current, request.PageSize);
+            return repository.User.FindAll()
+                .Include(x => x.Role)
+                .ApplySearch(request.InfoSearch!)
+                .ApplySort(request.Orderby!)
+                .ApplyPaging(request.Current, request.PageSize);
         }
 
         public User GetDetail(int userId,HttpContext context)
@@ -99,7 +101,7 @@ namespace EmailMarketing.Modules.Users.Services
         public void UpdateEmail(int userId, UpdateUserEmail request)
         {
             User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
-            User userUpdate = mapper.Map<UpdateUserEmail, User>(request, user);
+            User userUpdate = mapper.Map(request, user);
             repository.User.Update(userUpdate);
             repository.Save();
         }
@@ -107,7 +109,7 @@ namespace EmailMarketing.Modules.Users.Services
         public void UpdateName(int userId, UpdateUserName request)
         {
             User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
-            User userUpdate = mapper.Map<UpdateUserName, User>(request, user!);
+            User userUpdate = mapper.Map(request, user!);
             repository.User.Update(userUpdate);
             repository.Save();
         }
@@ -117,7 +119,7 @@ namespace EmailMarketing.Modules.Users.Services
             User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
             if (user is null || !BC.Verify(request.OldPassword, user.Password))
                 return false;
-            User userUpdate = mapper.Map<UpdateUserPassword, User>(request, user!);
+            User userUpdate = mapper.Map(request, user!);
             repository.User.Update(userUpdate);
             repository.Save();
             return true;
@@ -126,7 +128,7 @@ namespace EmailMarketing.Modules.Users.Services
         public void UpdateStatus(int userId, UpdateUserStatus request)
         {
             User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
-            User userUpdate = mapper.Map<UpdateUserStatus, User>(request, user!);
+            User userUpdate = mapper.Map(request, user!);
             repository.User.Update(userUpdate);
             repository.Save();
         }

@@ -1,4 +1,5 @@
 ﻿using EmailMarketing.Modules.Roles.Entities;
+using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Persistences.Repositories;
 using FluentValidation;
 
@@ -10,10 +11,9 @@ namespace EmailMarketing.Modules.Roles.Requests
         public UserType? UserType { get; set; }
         public List<string>? PermissionCode { get; set; }
     }
+    public class UpdateRoleRequest : CreateOrUpdateRoleRequest { }
 
-    public class CreateRoleRequest : CreateOrUpdateRoleRequest
-    {
-    }
+    public class CreateRoleRequest : CreateOrUpdateRoleRequest { }
 
     public class CreateOrUpdateRoleRequestValidator : AbstractValidator<CreateOrUpdateRoleRequest>
     {
@@ -28,12 +28,7 @@ namespace EmailMarketing.Modules.Roles.Requests
             RuleFor(role => role.PermissionCode).NotNull().WithMessage("{PropertyName} is required")
                 .Must((_, perCode) =>
                 {
-                    foreach (string code in perCode!)
-                    {
-                        if ((repository.Permission.FindByCondition(x => x.Code == code.Trim(' ')).Count() != 0) is false)
-                            return false;
-                    }
-                    return true;
+                    return repository.Permission.FindByCondition(x => perCode!.Contains(x.Code)).Count() == (perCode!.Count());
                 })
                 .WithMessage("Permission does not exists");
         }
@@ -42,6 +37,13 @@ namespace EmailMarketing.Modules.Roles.Requests
     public class CreateRoleRequestValidator : AbstractValidator<CreateRoleRequest>
     {
         public CreateRoleRequestValidator(IRepositoryWrapper repository)
+        {
+            RuleFor(role => role).SetValidator(new CreateOrUpdateRoleRequestValidator(repository));
+        }
+    }
+    public class UpdateRoleRequestValidator : AbstractValidator<UpdateRoleRequest>
+    {
+        public UpdateRoleRequestValidator(IRepositoryWrapper repository)
         {
             RuleFor(role => role).SetValidator(new CreateOrUpdateRoleRequestValidator(repository));
         }

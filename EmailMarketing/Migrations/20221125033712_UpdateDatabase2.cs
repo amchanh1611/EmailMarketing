@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace EmailMarketing.Migrations
 {
-    public partial class DatabaseFirst : Migration
+    public partial class UpdateDatabase2 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -20,7 +21,9 @@ namespace EmailMarketing.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Name = table.Column<string>(type: "varchar(50)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    UserType = table.Column<string>(type: "char(10)", nullable: false)
+                    UserType = table.Column<string>(type: "char(100)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Modules = table.Column<string>(type: "text", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -84,6 +87,10 @@ namespace EmailMarketing.Migrations
                     Password = table.Column<string>(type: "text", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     RoleId = table.Column<int>(type: "int", nullable: false),
+                    Phone = table.Column<string>(type: "char(11)", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Male = table.Column<sbyte>(type: "tinyint", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     Status = table.Column<sbyte>(type: "tinyint", nullable: false),
                     Avatar = table.Column<string>(type: "text", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")

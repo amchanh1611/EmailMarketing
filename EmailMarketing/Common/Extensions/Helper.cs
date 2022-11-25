@@ -1,4 +1,4 @@
-﻿namespace ProjectExample.Common.Extentions
+﻿namespace EmailMarketing.Common.Extensions
 {
     public static class Helper
     {
@@ -16,7 +16,7 @@
 
             return relativePath;
         }
-        public static string DownloadFile(this string path,HttpContext context)
+        public static string DownloadFile(this string path, HttpContext context)
         {
             return $"{context.Request.Scheme}://{context.Request.Host}/{path}";
         }
