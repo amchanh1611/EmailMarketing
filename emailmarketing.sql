@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 25, 2022 at 07:36 AM
+-- Generation Time: Nov 27, 2022 at 05:33 PM
 -- Server version: 10.4.25-MariaDB
 -- PHP Version: 8.1.10
 
@@ -48,6 +48,24 @@ INSERT INTO `permission` (`Code`, `Name`, `UserType`, `Modules`) VALUES
 ('ViewAccount', 'View account in system', 'Admin', 'Account'),
 ('ViewCustommer', 'View custommer in system', 'Admin,System', 'Custommer'),
 ('ViewProject', 'View project in system', 'Admin,System,Customer', 'Project');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `project`
+--
+
+CREATE TABLE `project` (
+  `Id` int(11) NOT NULL,
+  `Name` text NOT NULL,
+  `OwnerId` int(11) NOT NULL,
+  `ServicePackageId` int(11) NOT NULL,
+  `CreatedDate` datetime(6) NOT NULL,
+  `DateStart` datetime(6) NOT NULL,
+  `DateEnd` datetime(6) NOT NULL,
+  `Status` int(11) NOT NULL,
+  `CodeContract` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -103,6 +121,27 @@ INSERT INTO `role_permission` (`RoleId`, `PermissionCode`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `service_packages`
+--
+
+CREATE TABLE `service_packages` (
+  `Id` int(11) NOT NULL,
+  `Name` text NOT NULL,
+  `Quantity` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `service_packages`
+--
+
+INSERT INTO `service_packages` (`Id`, `Name`, `Quantity`) VALUES
+(2, 'Normal', 500),
+(3, 'Premium', 1000),
+(4, 'Start', 100);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `user`
 --
 
@@ -144,7 +183,8 @@ CREATE TABLE `__efmigrationshistory` (
 --
 
 INSERT INTO `__efmigrationshistory` (`MigrationId`, `ProductVersion`) VALUES
-('20221125033712_UpdateDatabase2', '6.0.11');
+('20221125033712_UpdateDatabase2', '6.0.11'),
+('20221127091249_CreateModelProjectServicePackage', '6.0.11');
 
 --
 -- Indexes for dumped tables
@@ -155,6 +195,14 @@ INSERT INTO `__efmigrationshistory` (`MigrationId`, `ProductVersion`) VALUES
 --
 ALTER TABLE `permission`
   ADD PRIMARY KEY (`Code`);
+
+--
+-- Indexes for table `project`
+--
+ALTER TABLE `project`
+  ADD PRIMARY KEY (`Id`),
+  ADD KEY `IX_project_OwnerId` (`OwnerId`),
+  ADD KEY `IX_project_ServicePackageId` (`ServicePackageId`);
 
 --
 -- Indexes for table `role`
@@ -168,6 +216,12 @@ ALTER TABLE `role`
 ALTER TABLE `role_permission`
   ADD PRIMARY KEY (`RoleId`,`PermissionCode`),
   ADD KEY `IX_role_permission_PermissionCode` (`PermissionCode`);
+
+--
+-- Indexes for table `service_packages`
+--
+ALTER TABLE `service_packages`
+  ADD PRIMARY KEY (`Id`);
 
 --
 -- Indexes for table `user`
@@ -187,10 +241,22 @@ ALTER TABLE `__efmigrationshistory`
 --
 
 --
+-- AUTO_INCREMENT for table `project`
+--
+ALTER TABLE `project`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `role`
 --
 ALTER TABLE `role`
   MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `service_packages`
+--
+ALTER TABLE `service_packages`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `user`
@@ -201,6 +267,13 @@ ALTER TABLE `user`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `project`
+--
+ALTER TABLE `project`
+  ADD CONSTRAINT `FK_project_service_packages_ServicePackageId` FOREIGN KEY (`ServicePackageId`) REFERENCES `service_packages` (`Id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `FK_project_user_OwnerId` FOREIGN KEY (`OwnerId`) REFERENCES `user` (`Id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `role_permission`
