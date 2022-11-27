@@ -1,33 +1,20 @@
 User
 Id	NickName(varchar255)	UserName(text)	Password(text)	RoleId	Status(tinyInt)	Avatar(text) Type
 
-
-
 Role
-Id	Name		Type
-1 	admin		1
-2 	Custommer	2
-3 	Custommer1	2
+Id	Name		UserType
 
 RolePermission
 RoleId PermissionCode
-1	CreateUser
-1	CreateProject
-1	ViewProject
-2	ViewProject 
 
 Permission
-Code			Name			Type
-CreateUser		Tao nguoi dung moi	1
-CreateProject		Tao du an moi		1
-ViewProject		Xem du an  		1,2 
+Code			Name			UserType
 
-1 CreateUser
-1 UpdateUser
-1 DeleteUser
-1 ViewUser
+ServicesPackage
+id Name Quantity
 
-2 ViewUser
+Project
+id name Owner CodeContract ServicesPackage CreatedDate DateStart DateEnd Status
 
 update profile
 //quan li token 

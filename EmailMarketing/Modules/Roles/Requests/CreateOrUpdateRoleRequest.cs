@@ -1,5 +1,4 @@
 ﻿using EmailMarketing.Modules.Roles.Entities;
-using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Persistences.Repositories;
 using FluentValidation;
 
@@ -9,7 +8,7 @@ namespace EmailMarketing.Modules.Roles.Requests
     {
         public string? Name { get; set; }
         public UserType? UserType { get; set; }
-        public List<string>? PermissionCode { get; set; }
+        public List<string>? PermissionCodes { get; set; }
     }
     public class UpdateRoleRequest : CreateOrUpdateRoleRequest { }
 
@@ -20,12 +19,12 @@ namespace EmailMarketing.Modules.Roles.Requests
         public CreateOrUpdateRoleRequestValidator(IRepositoryWrapper repository)
         {
             RuleFor(role => role.Name).NotEmpty().WithMessage("{PropertyName} is required")
-                .Must((_, name) => { return repository.Role.FindByCondition(x => x.Name == name!.Trim(' ')).Count()==0; })
+                .Must((_, name) => { return repository.Role.FindByCondition(x => x.Name == name!.Trim()).Count() == 0; })
                 .WithMessage("Role {PropertyName} already exists in system");
             RuleFor(role => role.UserType).NotEmpty()
                 .IsInEnum()
                 .WithMessage("{PropertyName} is required");
-            RuleFor(role => role.PermissionCode).NotNull().WithMessage("{PropertyName} is required")
+            RuleFor(role => role.PermissionCodes).NotNull().WithMessage("{PropertyName} is required")
                 .Must((_, perCode) =>
                 {
                     return repository.Permission.FindByCondition(x => perCode!.Contains(x.Code)).Count() == (perCode!.Count());

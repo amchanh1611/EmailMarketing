@@ -1,5 +1,7 @@
-﻿using EmailMarketing.Modules.Roles.Entities;
+﻿using EmailMarketing.Common.Pagination;
+using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.Roles.Requests;
+using EmailMarketing.Modules.Roles.Responses;
 using EmailMarketing.Modules.Roles.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -31,8 +33,23 @@ namespace EmailMarketing.Controllers
         [HttpGet("Permission")]
         public IActionResult GetPermission([FromQuery] UserType userType)
         {
-            List<Permission> result = roleServices.GetPermission(userType);
-            return Ok(result);
+            return Ok(roleServices.GetPermission(userType));
+        }
+        [HttpGet("Role")]
+        public IActionResult GetRole([FromQuery] GetRoleRequest request)
+        {
+            return Ok(roleServices.Get(request));
+        }
+        [HttpGet("PermissionOfRole/{roleId}")]
+        public IActionResult PermissionOfRole([FromRoute] int roleId)
+        {
+            return Ok(roleServices.PermissionOfRole(roleId));
+        }
+        [HttpPut("{roleId}")]
+        public IActionResult Update([FromRoute] int roleId, [FromBody]UpdateRoleRequest request)
+        {
+            roleServices.UpdateRole(roleId, request);
+            return Ok();
         }
     }
 }

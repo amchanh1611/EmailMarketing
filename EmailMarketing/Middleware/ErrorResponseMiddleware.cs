@@ -6,19 +6,41 @@ namespace EmailMarketing.Middleware
 {
     public class ExceptionBase : Exception
     {
-        public ExceptionBase() : base() { }
+        public ExceptionBase() : base()
+        {
+        }
 
-        public ExceptionBase(string message) : base(message) { }
+        public ExceptionBase(string message) : base(message)
+        {
+        }
 
         public ExceptionBase(string message, params object[] args)
             : base(String.Format(CultureInfo.CurrentCulture, message, args))
         {
         }
     }
-    public class UnauthorizedException: ExceptionBase
+
+    public class UnauthorizedException : ExceptionBase
     {
-        public UnauthorizedException(string message) : base(message) { }
+        public UnauthorizedException(string message) : base(message)
+        {
+        }
     }
+
+    public class BadRequestException : ExceptionBase
+    {
+        public BadRequestException(string message) : base(message)
+        {
+        }
+    }
+    //public class InternalServerErrorException : ExceptionBase
+    //{
+    //    public InternalServerErrorException() : base()
+    //    {
+
+    //    }
+    //}
+
     public class ErrorResponseMiddleware
     {
         private readonly RequestDelegate next;
@@ -27,27 +49,34 @@ namespace EmailMarketing.Middleware
         {
             this.next = next;
         }
+
         public async Task InvokeAsync(HttpContext context)
         {
             try
             {
                 await next(context);
             }
-            catch(Exception error)
+            catch (Exception error)
             {
                 HttpResponse response = context.Response;
                 response.ContentType = "application/json";
 
-                switch(error)
+                switch (error)
                 {
                     case UnauthorizedException exception:
-                        // custom application error
+                        // custom Unauthorized error
                         response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                        break;
+
+                    case BadRequestException ex:
+                        // custom BadRequest error
+                        response.StatusCode = (int)HttpStatusCode.BadRequest;
                         break;
                     case KeyNotFoundException e:
                         // not found error
                         response.StatusCode = (int)HttpStatusCode.NotFound;
                         break;
+
                     default:
                         // unhandled error
                         response.StatusCode = (int)HttpStatusCode.InternalServerError;

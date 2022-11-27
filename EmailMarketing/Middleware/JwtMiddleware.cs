@@ -1,4 +1,5 @@
 ﻿using EmailMarketing.Modules.Users.Entities;
+using EmailMarketing.Modules.Users.Responses;
 using EmailMarketing.Modules.Users.Services;
 using System.Net;
 using System.Security.Claims;
@@ -21,22 +22,17 @@ namespace EmailMarketing.Middleware
             if (claim != null)
             {
                 int userId = int.Parse(claim.Value);
-                User user = userServices.GetDetail(userId, context);
+                ProfileResponse user = userServices.GetProfile(userId, context);
                 if (user.Status == UserStatus.Lock)
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     throw new UnauthorizedException("User has been locked");
                 }
-
             }
             else
             {
                 await next(context);
             }
-
-
-
-
         }
     }
 }

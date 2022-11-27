@@ -1,25 +1,30 @@
 ﻿using EmailMarketing.Common.RepositoriesBase;
+using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Roles.Entities;
+using EmailMarketing.Modules.ServiecesPackage.Enities;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Persistences.Context;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace EmailMarketing.Persistences.Repositories
 {
     public interface IUserRepository : IRepositoryBase<User>
-    {
-    }
+    { }
 
     public interface IRoleRepository : IRepositoryBase<Role>
-    {
-    }
+    { }
 
     public interface IPermissionRepository : IRepositoryBase<Permission>
-    {
-    }
+    { }
 
     public interface IRolePermissionRepository : IRepositoryBase<RolePermission>
-    {
-    }
+    { }
+
+    public interface IServicePackageRepository : IRepositoryBase<ServicePackage>
+    { }
+
+    public interface IProjectRepository : IRepositoryBase<Project>
+    { }
 
     public interface IRepositoryWrapper
     {
@@ -27,8 +32,12 @@ namespace EmailMarketing.Persistences.Repositories
         IRoleRepository Role { get; }
         IRolePermissionRepository RolePermission { get; }
         IPermissionRepository Permission { get; }
+        IServicePackageRepository ServicePackage { get; }
+        IProjectRepository Project { get; }
 
         void Save();
+
+        IDbContextTransaction Transaction();
     }
 
     public class UserRepository : RepositoryBase<User>, IUserRepository
@@ -59,12 +68,28 @@ namespace EmailMarketing.Persistences.Repositories
         }
     }
 
+    public class ServicePackageRepository : RepositoryBase<ServicePackage>, IServicePackageRepository
+    {
+        public ServicePackageRepository(AppDbContext context) : base(context)
+        {
+        }
+    }
+
+    public class ProjectRepository : RepositoryBase<Project>, IProjectRepository
+    {
+        public ProjectRepository(AppDbContext context) : base(context)
+        {
+        }
+    }
+
     public class RepositoryWrapper : IRepositoryWrapper
     {
         private IUserRepository user;
         private IRoleRepository role;
         private IRolePermissionRepository rolePermission;
         private IPermissionRepository permission;
+        private IServicePackageRepository servicePackage;
+        private IProjectRepository project;
         private readonly AppDbContext context;
 
         public RepositoryWrapper(AppDbContext context)
@@ -112,7 +137,7 @@ namespace EmailMarketing.Persistences.Repositories
         {
             get
             {
-                if(permission is null)
+                if (permission is null)
                 {
                     permission = new PermissionRepository(context);
                 }
@@ -120,9 +145,37 @@ namespace EmailMarketing.Persistences.Repositories
             }
         }
 
+        public IServicePackageRepository ServicePackage
+        {
+            get
+            {
+                if (servicePackage is null)
+                {
+                    servicePackage = new ServicePackageRepository(context);
+                }
+                return servicePackage;
+            }
+        }
+        public IProjectRepository Project
+        {
+            get
+            {
+                if(project is null)
+                {
+                    project = new ProjectRepository(context);
+                }
+                return project;
+            }
+        }
+
         public void Save()
         {
             context.SaveChanges();
+        }
+
+        public IDbContextTransaction Transaction()
+        {
+            return context.Database.BeginTransaction();
         }
     }
 }

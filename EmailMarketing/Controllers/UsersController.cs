@@ -36,14 +36,12 @@ namespace EmailMarketing.Controllers
             return BadRequest("No user exists in the system");
         }
 
-        [HttpGet("{userId}")]
-        public IActionResult GetDetail([FromRoute] int userId)
+        [HttpGet("Profile"), Authorize]
+        public IActionResult GetProfile()
         {
             HttpContext context = HttpContext;
-            User result = userServices.GetDetail(userId,context);
-            if (result != null)
-                return Ok(result);
-            return BadRequest("User does not exist");
+            Claim? claim = context.User.FindFirst(ClaimTypes.NameIdentifier);
+            return Ok(userServices.GetProfile(int.Parse(claim!.Value), context));
         }
 
         [HttpDelete("{userId}")]
@@ -53,35 +51,24 @@ namespace EmailMarketing.Controllers
             return Ok();
         }
 
-        [HttpPut("Status/{userId}")]
-        public IActionResult UpdateStatus([FromRoute] int userId, [FromBody] UpdateUserStatus request)
+        [HttpPut("{userId}")]
+        public IActionResult UpdateUser([FromRoute] int userId, [FromBody] UpdateUser request)
         {
-            userServices.UpdateStatus(userId, request);
-            return Ok();
-        }
-
-        [HttpPut("Email/{userId}")]
-        public IActionResult UpdateEmail([FromRoute] int userId, [FromBody] UpdateUserEmail request)
-        {
-            userServices.UpdateEmail(userId, request);
+            userServices.UpdateUser(userId, request);
             return Ok();
         }
 
         [HttpPost("Login")]
         public IActionResult Login([FromBody] UserLogin user)
         {
-            string token = userServices.Login(user.Email!, user.Password!);
-            if (token != null)
-                return Ok(token);
-            return BadRequest("Incorrect Email/Password");
+            return Ok(userServices.Login(user.Email!, user.Password!));
         }
-        
-        [HttpPut("Profile/Name"),Authorize]
+
+        [HttpPut("Profile/Name"), Authorize]
         public IActionResult UpdateProfileName([FromBody] UpdateUserName request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            int userId = int.Parse(claim!.Value);
-            userServices.UpdateName(userId, request);
+            userServices.UpdateName(int.Parse(claim!.Value), request);
             return Ok();
         }
 
@@ -89,8 +76,7 @@ namespace EmailMarketing.Controllers
         public async Task<IActionResult> UpdateProfileAvatarAsync([FromForm] UpdateUserAvatar request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            int userId = int.Parse(claim!.Value);
-            await userServices.UpdateAvatarAsync(userId, request);
+            await userServices.UpdateAvatarAsync(int.Parse(claim!.Value), request);
             return Ok();
         }
 
@@ -98,11 +84,8 @@ namespace EmailMarketing.Controllers
         public IActionResult UpdateProfilePassword([FromBody] UpdateUserPassword request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            int userId = int.Parse(claim!.Value);
-            bool result = userServices.UpdatePassword(userId, request);
-            if (result)
-                return Ok();
-            return BadRequest("Incorrect old password");
+            userServices.UpdatePassword(int.Parse(claim!.Value), request);
+            return Ok();
         }
     }
 }

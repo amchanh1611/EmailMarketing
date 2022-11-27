@@ -2,10 +2,10 @@
 {
     public static class Helper
     {
-        public static async Task<string> UploadFilesAsync(this IFormFile file, string folder)
+        public static async Task<string> UploadFilesAsync(this IFormFile file, string path)
         {
 
-            string relativePath = $"{folder}/{DateTime.UtcNow.Ticks + file.FileName}";
+            string relativePath = $"{path}/{DateTime.UtcNow.Ticks + file.FileName}";
 
             string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath);
 
@@ -16,7 +16,7 @@
 
             return relativePath;
         }
-        public static string DownloadFile(this string path, HttpContext context)
+        public static string ReadAsLink(this string path, HttpContext context)
         {
             return $"{context.Request.Scheme}://{context.Request.Host}/{path}";
         }

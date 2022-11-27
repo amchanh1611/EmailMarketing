@@ -4,8 +4,10 @@ using EmailMarketing.Common.JWT;
 using EmailMarketing.Common.Pagination;
 using EmailMarketing.Common.Search;
 using EmailMarketing.Common.Sort;
+using EmailMarketing.Middleware;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
+using EmailMarketing.Modules.Users.Responses;
 using EmailMarketing.Persistences.Repositories;
 using Microsoft.EntityFrameworkCore;
 using BC = BCrypt.Net.BCrypt;
@@ -20,17 +22,15 @@ namespace EmailMarketing.Modules.Users.Services
 
         void Delete(int userId);
 
-        void UpdateStatus(int userId, UpdateUserStatus request);
+        void UpdateUser(int userId, UpdateUser request);
 
-        void UpdateEmail(int userId, UpdateUserEmail request);
-
-        User GetDetail(int userId,HttpContext context);
+        ProfileResponse GetProfile(int userId,HttpContext context);
 
         string Login(string email, string password);
 
         void UpdateName(int userId, UpdateUserName name);
 
-        bool UpdatePassword(int userId, UpdateUserPassword user);
+        void UpdatePassword(int userId, UpdateUserPassword user);
 
         Task UpdateAvatarAsync(int userId, UpdateUserAvatar file);
     }
@@ -50,14 +50,13 @@ namespace EmailMarketing.Modules.Users.Services
 
         public void Create(CreateUserRequest request)
         {
-            User user = mapper.Map<CreateUserRequest, User>(request);
-            repository.User.Create(user);
+            repository.User.Create(mapper.Map<CreateUserRequest, User>(request));
             repository.Save();
         }
 
         public void Delete(int userId)
         {
-            User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
+            User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
             repository.User.Delete(user!);
             repository.Save();
         }
@@ -68,68 +67,71 @@ namespace EmailMarketing.Modules.Users.Services
                 .Include(x => x.Role)
                 .ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby!)
-                .ApplyPaging(request.Current, request.PageSize);
+                .ApplyPagging(request.Current, request.PageSize);
         }
 
-        public User GetDetail(int userId,HttpContext context)
+        public ProfileResponse GetProfile(int userId,HttpContext context)
         {
-            User user = repository.User.FindByCondition(x => x.Id == userId).Include(x => x.Role).ThenInclude(x=>x.RolePermissions).FirstOrDefault()!;
-            user.Avatar = user.Avatar!.DownloadFile(context);
-            return user;
+            ProfileResponse profile = repository.User
+                .FindByCondition(x => x.Id == userId)
+                .Include(x => x.Role)
+                .ThenInclude(x=>x.RolePermissions)
+                .Select(x=> new ProfileResponse 
+                { 
+                    Email = x.Email, Name = x.Name,RoleId=x.RoleId,Avatar=x.Avatar,Status=x.Status,
+                    RoleName = x.Role!.Name,
+                    PermissionCode =(x.Role.RolePermissions.Select(x=>x.PermissionCode)).ToList() })
+                .FirstOrDefault()!;
+
+            //Bỏ dòng này vì chắc chắnn có
+            if (profile is null)
+                throw new BadRequestException("User doest not exist in system");
+
+            profile.Avatar = profile.Avatar!.ReadAsLink(context);
+            return profile;
         }
 
         public string Login(string email, string password)
         {
             User user = repository.User.FindByCondition(x => x.Email == email).FirstOrDefault()!;
 
-            if (user is null || !BC.Verify(password, user.Password))
-                return null!
-                    ;
+            if (user is null)
+                throw new BadRequestException("Incorrect email");
+
+            if(!BC.Verify(password, user.Password))
+                throw new BadRequestException("Incorrect password");
+
             return jwt.GenerateJwtToken(user);
         }
 
         public async Task UpdateAvatarAsync(int userId, UpdateUserAvatar request)
         {
-            User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
+            User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
 
-            user.Avatar = await request.File!.UploadFilesAsync("Avatars");
+            user!.Avatar = await request.File!.UploadFilesAsync("Avatars");
             
             repository.User.Update(user);
             repository.Save();
         }
 
-        public void UpdateEmail(int userId, UpdateUserEmail request)
-        {
-            User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
-            User userUpdate = mapper.Map(request, user);
-            repository.User.Update(userUpdate);
-            repository.Save();
-        }
-
         public void UpdateName(int userId, UpdateUserName request)
         {
-            User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
-            User userUpdate = mapper.Map(request, user!);
-            repository.User.Update(userUpdate);
+            User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
+            repository.User.Update(mapper.Map(request, user!));
             repository.Save();
         }
 
-        public bool UpdatePassword(int userId, UpdateUserPassword request)
+        public void UpdatePassword(int userId, UpdateUserPassword request)
         {
-            User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
-            if (user is null || !BC.Verify(request.OldPassword, user.Password))
-                return false;
-            User userUpdate = mapper.Map(request, user!);
-            repository.User.Update(userUpdate);
+            User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
+            repository.User.Update(mapper.Map(request, user!));
             repository.Save();
-            return true;
         }
 
-        public void UpdateStatus(int userId, UpdateUserStatus request)
+        public void UpdateUser(int userId, UpdateUser request)
         {
-            User user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault()!;
-            User userUpdate = mapper.Map(request, user!);
-            repository.User.Update(userUpdate);
+            User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
+            repository.User.Update(mapper.Map(request, user!));
             repository.Save();
         }
     }

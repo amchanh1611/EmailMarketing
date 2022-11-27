@@ -1,4 +1,5 @@
-﻿using EmailMarketing.Modules.Roles.Entities;
+﻿using EmailMarketing.Modules.Projects.Enities;
+using EmailMarketing.Modules.Roles.Entities;
 using System.Text.Json.Serialization;
 
 namespace EmailMarketing.Modules.Users.Entities
@@ -16,7 +17,8 @@ namespace EmailMarketing.Modules.Users.Entities
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public UserStatus Status { get; set; } = UserStatus.Active;
         public string? Avatar { get; set; } 
-        public Role? Role { get; set; } 
+        public Role? Role { get; set; }
+        public ICollection<Project> Projects { get; set; } = default!;
     }
 
     public enum UserStatus

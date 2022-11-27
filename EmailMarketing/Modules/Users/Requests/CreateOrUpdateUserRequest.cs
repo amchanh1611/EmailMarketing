@@ -1,6 +1,8 @@
 ﻿using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Persistences.Repositories;
 using FluentValidation;
+using BC = BCrypt.Net.BCrypt;
+using System.Security.Claims;
 
 namespace EmailMarketing.Modules.Users.Requests
 {
@@ -18,13 +20,11 @@ namespace EmailMarketing.Modules.Users.Requests
     {
     }
 
-    public class UpdateUserStatus
+    public class UpdateUser
     {
         public UserStatus? Status { get; set; }
-    }
-    public class UpdateUserEmail
-    {
         public string? Email { get; set; }
+        public int? RoleId { get; set; }
     }
     public class UpdateUserName
     {
@@ -73,28 +73,27 @@ namespace EmailMarketing.Modules.Users.Requests
         }
     }
 
-    public class UpdateUserStatusValidator : AbstractValidator<UpdateUserStatus>
+    public class UpdateUserValidator : AbstractValidator<UpdateUser>
     {
-        public UpdateUserStatusValidator()
+        public UpdateUserValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
         {
             RuleFor(user => user.Status).IsInEnum().WithMessage("{PropertyName} doest not exists");
-        }
-    }
-    public class UpdateEmailUserValidator : AbstractValidator<UpdateUserEmail>
-    {
-        public UpdateEmailUserValidator(IRepositoryWrapper repository,IHttpContextAccessor httpContextAccessor)
-        {
             RuleFor(user => user.Email).NotEmpty().WithMessage("{PropertyName} is required")
               .EmailAddress().WithMessage("{PropertyName} is not valid")
               .Must((_, email) =>
               {
                   string[] arrPath = httpContextAccessor.HttpContext!.Request.Path.ToString().Split("/");
-                  //string userId = arrPath[arrPath.Length-1];
                   return repository.User.FindByCondition(x =>
-                  x.Email == email.Trim() 
+                  x.Email == email.Trim()
                   &&
-                  x.Id!=int.Parse(arrPath[arrPath.Length-1])).Count() == 0;
+                  x.Id != int.Parse(arrPath[arrPath.Length - 1]))
+                  .Count() == 0;
               }).WithMessage("{PropertyName} already exists");
+            RuleFor(user => user.RoleId).NotNull().NotEqual(0).WithMessage("{PropertyName} is required")
+                .Must((_, roleId) =>
+                {
+                    return repository.Role.FindByCondition(x => x.Id == roleId).Any();
+                });
         }
     }
     public class UpdateUserNameValidator : AbstractValidator<UpdateUserName>
@@ -106,9 +105,15 @@ namespace EmailMarketing.Modules.Users.Requests
     }
     public class UpdateUserPasswordValidator : AbstractValidator<UpdateUserPassword>
     {
-        public UpdateUserPasswordValidator()
+        public UpdateUserPasswordValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
         {
-            RuleFor(user => user.OldPassword).NotEmpty().WithMessage("{PropertyName} is required");
+            RuleFor(user => user.OldPassword).NotEmpty().WithMessage("{PropertyName} is required")
+                .Must((_,oldPassword)=>
+                {
+                    Claim? claim = httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier);
+                    User? user = repository.User.FindByCondition(x => x.Id == (int.Parse(claim!.Value))).FirstOrDefault();
+                    return BC.Verify(user!.Password, oldPassword);
+                }).WithMessage("Incorrect {PropertyName}");
             RuleFor(user => user.NewPassword).NotEmpty().WithMessage("{PropertyName} is required")
               .MinimumLength(8).WithMessage("{PropertyName} is at least 8 charracter")
               .Matches("[A-Z]").WithMessage("{PropertyName} must contain at least one uppercase letter.")

@@ -1,6 +1,10 @@
 ﻿using AutoMapper;
+using EmailMarketing.Modules.Projects.Enities;
+using EmailMarketing.Modules.Projects.Request;
 using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.Roles.Requests;
+using EmailMarketing.Modules.ServiecesPackage.Enities;
+using EmailMarketing.Modules.ServiecesPackage.Request;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
 using BC = BCrypt.Net.BCrypt;
@@ -15,19 +19,27 @@ namespace EmailMarketing.Mapping
             //User
             CreateMap<CreateUserRequest, User>()
                 .ForMember(dest => dest.Password,src=> src.MapFrom(x => BC.HashPassword(x.Password)));
-            CreateMap<UpdateUserStatus, User>();
-            CreateMap<UpdateUserEmail, User>();
+            CreateMap<UpdateUser, User>();
             CreateMap<UpdateUserName, User>();
             CreateMap<UpdateUserPassword, User>()
                 .ForMember(dest=>dest.Password,src=>src.MapFrom(x=>BC.HashPassword(x.NewPassword)));
 
             //Role
             CreateMap<CreateRoleRequest, Role>();
+            CreateMap<UpdateRoleRequest, Role>();
 
             //Permission
             CreateMap<CreatePermissionRequest, Permission>()
                 .ForMember(dest => dest.UserType, opt => opt.Ignore());
-            
+
+            //ServicePackage
+            CreateMap<CreateServicePackageRequest, ServicePackage>();
+            CreateMap<UpdateServicePackageRequest, ServicePackage>();
+
+            //Project
+            CreateMap<CreateProjectRequest, Project>();
+            CreateMap<UpdateProjectRequest, Project>();
+
         }
     }
 }

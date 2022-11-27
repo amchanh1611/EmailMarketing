@@ -26,7 +26,7 @@ namespace EmailMarketing.Common.JWT
         {
             // generate token that is valid for 7 days
             JwtSecurityTokenHandler tokenHandler = new();
-            byte[] key = Encoding.ASCII.GetBytes(appSettings.Jwt.Key);
+            byte[] key = Encoding.ASCII.GetBytes(appSettings!.Jwt!.Key!);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Issuer = appSettings.Jwt.Issuer,

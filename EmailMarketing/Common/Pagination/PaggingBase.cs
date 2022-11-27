@@ -2,7 +2,7 @@
 {
     public static class PaggingBase
     {
-        public static PaggingResponse<T> ApplyPaging<T>(this IQueryable<T> source, int current, int pageSize)
+        public static PaggingResponse<T> ApplyPagging<T>(this IQueryable<T> source, int current, int pageSize)
         {
             int count = source.Count();
             PageInfo pageInfo = new PageInfo(count, pageSize, current);

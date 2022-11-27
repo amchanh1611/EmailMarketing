@@ -3,6 +3,7 @@ using EmailMarketing.Common.JWT;
 using EmailMarketing.Mapping;
 using EmailMarketing.Middleware;
 using EmailMarketing.Modules.Roles.Services;
+using EmailMarketing.Modules.ServiecesPackage.Services;
 using EmailMarketing.Modules.Users.Services;
 using EmailMarketing.Persistences.Context;
 using EmailMarketing.Persistences.Repositories;
@@ -30,6 +31,7 @@ builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IRoleServices, RoleServices>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
+builder.Services.AddScoped<IServicePackageServices, ServicePackageServices>();
 
 //Appsettings
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
