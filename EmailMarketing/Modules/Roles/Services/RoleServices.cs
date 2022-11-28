@@ -2,6 +2,7 @@
 using EmailMarketing.Common.Pagination;
 using EmailMarketing.Common.Search;
 using EmailMarketing.Common.Sort;
+using EmailMarketing.Middleware;
 using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.Roles.Requests;
 using EmailMarketing.Modules.Roles.Responses;
@@ -22,7 +23,7 @@ namespace EmailMarketing.Modules.Roles.Services
 
         PaggingResponse<Role> Get(GetRoleRequest request);
 
-        List<PermissionOfRoleResponse> PermissionOfRole(int roleId);
+        PermissionOfRoleResponse PermissionOfRole(int roleId);
 
         List<PermissionResponse> GetPermission(UserType userType);
     }
@@ -44,7 +45,6 @@ namespace EmailMarketing.Modules.Roles.Services
             try
             {
                 repository.Role.Create(mapper.Map<CreateRoleRequest, Role>(request));
-                repository.Save();
                 Role? role = repository.Role.FindByCondition(x => x.Name == request.Name && x.UserType == request.UserType).FirstOrDefault();
 
                 foreach (string permissionCode in request.PermissionCodes!)
@@ -52,13 +52,12 @@ namespace EmailMarketing.Modules.Roles.Services
                     repository.RolePermission.Create(new RolePermission { RoleId = role!.Id, PermissionCode = permissionCode });
                 }
                 repository.Save();
-                throw new Exception();
                 transaction.Commit();
             }
             catch (Exception ex)
             {
                 transaction.Rollback();
-                throw new Exception();
+                throw new BadRequestException("Create fail");
             }
         }
 
@@ -92,22 +91,29 @@ namespace EmailMarketing.Modules.Roles.Services
                 {
                     Modules = grp.Key,
                     Permissions = grp.Select(x => new Permissions { Code = x.Code, Name = x.Name }).ToList()
-                })
-                .ToList();
+                }).ToList();
         }
 
-        public List<PermissionOfRoleResponse> PermissionOfRole(int roleId)
+        public PermissionOfRoleResponse PermissionOfRole(int roleId)
         {
             return repository.RolePermission
                 .FindByCondition(x => x.RoleId == roleId)
                 .Include(x => x.Role)
+                .Include(x => x.Permission)
+                .ToList()
                 .GroupBy(x => x.RoleId)
                 .Select(grp => new PermissionOfRoleResponse
                 {
                     RoleId = grp.Key,
-                    PermissionCodes = grp.Select(x => x.PermissionCode).ToList()
+                    Permissions = grp.Select(x => x.Permission)
+                    .GroupBy(x => x.Modules)
+                    .Select(grp => new PermissionResponse
+                    {
+                        Modules = grp.Key,
+                        Permissions = grp.Select(x => new Permissions { Code = x!.Code, Name = x.Name }).ToList()
+                    }).ToList()
                 })
-                .ToList()!;
+                .FirstOrDefault()!;
         }
 
         public void UpdateRole(int roleId, UpdateRoleRequest request)
@@ -116,53 +122,34 @@ namespace EmailMarketing.Modules.Roles.Services
             try
             {
                 Role? role = repository.Role.FindByCondition(x => x.Id == roleId).FirstOrDefault();
+                if (role is null)
+                    throw new Exception();
                 repository.Role.Update(mapper.Map(request, role)!);
-                repository.Save();
 
-                if (request.PermissionCodes is null)
-                    trans.Commit();
-                else
+                List<string> permissionOfRole = repository.RolePermission
+               .FindByCondition(x => x.RoleId == roleId)
+               .Select(x => x.PermissionCode).ToList()
+               .ToList();
+
+                List<string> lstAdd = request.PermissionCodes!.Except(permissionOfRole).ToList(); 
+
+                foreach (string permission in lstAdd)
                 {
-                    List<RolePermission> rolePermission = repository.RolePermission
-                   .FindByCondition(x => x.RoleId == roleId)
-                   .ToList();
-
-                    foreach (string permission in request.PermissionCodes!)
-                    {
-                        repository.RolePermission.Create(new RolePermission { RoleId = role!.Id, PermissionCode = permission });
-                    }
-
-                    foreach (RolePermission permission in rolePermission)
-                    {
-                        repository.RolePermission.Delete(permission);
-                    }
+                    repository.RolePermission.Create(new RolePermission { RoleId = role!.Id, PermissionCode = permission });
                 }
-               
+                List<string> lstRemove = permissionOfRole.Except(request.PermissionCodes!).ToList();
 
-                //List<string> rolePermissionString = repository.RolePermission
-                //    .FindByCondition(x => x.RoleId == roleId)
-                //    .Select(x => x.PermissionCode)
-                //    .ToList();
-
-                //List<string> collection = rolePermissionString.Union(request.PermissionCodes).ToList();
-
-                //List<string> collectionDelete = collection.Except(request.PermissionCodes).ToList();
-                //foreach (string permissionDelete in collectionDelete)
-                //{
-                //    repository.RolePermission.Delete(new RolePermission { RoleId = role!.Id, PermissionCode = permissionDelete });
-                //}
-                //List<string> collectionAdd = collection.Except(rolePermissionString).ToList();
-                //foreach (string permissionAdd in collectionAdd)
-                //{
-                //    repository.RolePermission.Create(new RolePermission { RoleId = role!.Id, PermissionCode = permissionAdd });
-                //}
-
+                foreach (string permission in lstRemove)
+                {
+                    repository.RolePermission.Delete(new RolePermission { RoleId=role!.Id,PermissionCode=permission});
+                }
                 repository.Save();
                 trans.Commit();
             }
             catch (Exception ex)
             {
                 trans.Rollback();
+                throw new BadRequestException("Role does not exists in system");
             }
         }
     }

@@ -18,9 +18,7 @@ namespace EmailMarketing.Modules.Roles.Requests
     {
         public CreateOrUpdateRoleRequestValidator(IRepositoryWrapper repository)
         {
-            RuleFor(role => role.Name).NotEmpty().WithMessage("{PropertyName} is required")
-                .Must((_, name) => { return repository.Role.FindByCondition(x => x.Name == name!.Trim()).Count() == 0; })
-                .WithMessage("Role {PropertyName} already exists in system");
+            RuleFor(role => role.Name).NotEmpty().WithMessage("{PropertyName} is required");
             RuleFor(role => role.UserType).NotEmpty()
                 .IsInEnum()
                 .WithMessage("{PropertyName} is required");

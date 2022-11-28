@@ -1,26 +1,14 @@
 //quan li token 
 
-GroupBy theo modules V
-gộp update user lại V
-sua getdeil thanh get profile V
-updatePassword check validate old pass V
 xóa dự án nhớ check đã có dữ liệu gửi mail chưa  (để sau)
 
-updateRole()??????????
-transaction?????????
-Include()?????????? rolepermission
-GetProfile()?????????
-ErrorHandleMiddleware???????
-màn hình chỉnh sửa role nên làm 1 api xem có cả name và permission em đang làm 2 api?????
-chia modules thiết kế nên chia theo bảng hay theo màn hình????????????
-Dự án vừa tạo nên để trạng thái là lock?????? khi nào tới ngày bđ thì mở lên
-nên có thêm 1 api get user có type là khách hàng????????
-nên có cái throw exception cho update nếu truyền vào Id không có trong hệ thống
-
-
 dự án đã bắt dầu không được xóa   
-Bỏ loại dự án
-them ngày bđ kt
 
+//Dat lại ten router PermissionOfRoute V
+//Sua lai getId in httpContext V
+//nên có thêm 1 api get user có type là khách hàng???????? them filler vao api get user V
+//RemoveRange() deleteMultiple
+//AddRange 
+//csv or exel
 
-Gắn Authorize cho profile lở user bị khóa là không xem đc profile luôn??????????
+1 2 3   2 4 5

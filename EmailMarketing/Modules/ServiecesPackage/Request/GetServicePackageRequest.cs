@@ -4,5 +4,6 @@ namespace EmailMarketing.Modules.ServiecesPackage.Request
 {
     public class GetServicePackageRequest : GetRequestBase
     {
+
     }
 }

@@ -43,6 +43,12 @@ namespace EmailMarketing.Controllers
             Claim? claim = context.User.FindFirst(ClaimTypes.NameIdentifier);
             return Ok(userServices.GetProfile(int.Parse(claim!.Value), context));
         }
+        [HttpGet("{userId}")]
+        public IActionResult GetProfile([FromRoute] int userId)
+        {
+            HttpContext context = HttpContext;
+            return Ok(userServices.GetProfile(userId, context));
+        }
 
         [HttpDelete("{userId}")]
         public IActionResult Delete([FromRoute] int userId)
@@ -85,7 +91,7 @@ namespace EmailMarketing.Controllers
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             userServices.UpdatePassword(int.Parse(claim!.Value), request);
-            return Ok();
+            return Ok("Ok");
         }
     }
 }

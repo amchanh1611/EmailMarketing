@@ -42,12 +42,12 @@ namespace EmailMarketing.Modules.ServiecesPackage.Request
             RuleFor(x => x.Name).NotEmpty().WithMessage("{PropertyName is required}")
               .Must((_, name) =>
               {
-                  string[] arrPath = httpContextAccessor.HttpContext!.Request.Path.ToString().Split('/');
-                  return !(repository.ServicePackage.FindByCondition(
+                  int userId = int.Parse(httpContextAccessor.HttpContext!.GetRouteValue("servicePackageId")!.ToString()!);
+                  return !repository.ServicePackage.FindByCondition(
                       x => x.Name == name!.Trim()
                       &&
-                      x.Id != int.Parse(arrPath[arrPath.Length-1]))
-                  .Any());
+                      x.Id != userId)
+                  .Any();
               }).WithMessage("{PropertyName} already exists");
         }
     }

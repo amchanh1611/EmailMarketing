@@ -12,6 +12,6 @@ namespace EmailMarketing.Modules.Roles.Responses
     public class PermissionOfRoleResponse
     {
         public int RoleId { get; set; }
-        public List<string>? PermissionCodes { get; set; }
+        public List<PermissionResponse>? Permissions { get; set; }
     }
 }

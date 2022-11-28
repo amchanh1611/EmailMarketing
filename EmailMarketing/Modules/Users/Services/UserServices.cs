@@ -5,6 +5,7 @@ using EmailMarketing.Common.Pagination;
 using EmailMarketing.Common.Search;
 using EmailMarketing.Common.Sort;
 using EmailMarketing.Middleware;
+using EmailMarketing.Modules.Roles.Responses;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
 using EmailMarketing.Modules.Users.Responses;
@@ -24,7 +25,7 @@ namespace EmailMarketing.Modules.Users.Services
 
         void UpdateUser(int userId, UpdateUser request);
 
-        ProfileResponse GetProfile(int userId,HttpContext context);
+        UserDetailResponse GetProfile(int userId,HttpContext context);
 
         string Login(string email, string password);
 
@@ -63,24 +64,34 @@ namespace EmailMarketing.Modules.Users.Services
 
         public PaggingResponse<User> Get(GetUserRequest request)
         {
-            return repository.User.FindAll()
-                .Include(x => x.Role)
-                .ApplySearch(request.InfoSearch!)
+            IQueryable<User> response = repository.User.FindAll().Include(x => x.Role);
+            if (request.Fillter != null)
+                 response = repository.User.FindAll().Include(x => x.Role)
+                    .Where(x => x.Role!.Name == request.Fillter);
+                
+            return response.ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby!)
                 .ApplyPagging(request.Current, request.PageSize);
         }
 
-        public ProfileResponse GetProfile(int userId,HttpContext context)
+        public UserDetailResponse GetProfile(int userId,HttpContext context)
         {
-            ProfileResponse profile = repository.User
+            UserDetailResponse profile = repository.User
                 .FindByCondition(x => x.Id == userId)
                 .Include(x => x.Role)
                 .ThenInclude(x=>x.RolePermissions)
-                .Select(x=> new ProfileResponse 
+                .ThenInclude(x=>x.Permission)
+                .ToList()
+                .Select(x=> new UserDetailResponse 
                 { 
-                    Email = x.Email, Name = x.Name,RoleId=x.RoleId,Avatar=x.Avatar,Status=x.Status,
-                    RoleName = x.Role!.Name,
-                    PermissionCode =(x.Role.RolePermissions.Select(x=>x.PermissionCode)).ToList() })
+                    Email = x.Email, Name = x.Name,RoleId=x.RoleId,Avatar=x.Avatar,Status=x.Status,RoleName = x.Role!.Name,
+                    Permissions = x.Role.RolePermissions.Select(x => x.Permission).GroupBy(key => key!.Modules)
+                    .Select(grp => new PermissionResponse
+                    {
+                        Modules = grp.Key,
+                        Permissions = grp.Select(x => new Permissions { Code = x!.Code, Name = x.Name }).ToList()
+                    }).ToList()
+                })
                 .FirstOrDefault()!;
 
             //Bỏ dòng này vì chắc chắnn có
@@ -117,6 +128,7 @@ namespace EmailMarketing.Modules.Users.Services
         public void UpdateName(int userId, UpdateUserName request)
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
+
             repository.User.Update(mapper.Map(request, user!));
             repository.Save();
         }
@@ -131,6 +143,10 @@ namespace EmailMarketing.Modules.Users.Services
         public void UpdateUser(int userId, UpdateUser request)
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
+
+            if (user is null)
+                throw new BadRequestException("User does not in system");
+
             repository.User.Update(mapper.Map(request, user!));
             repository.Save();
         }

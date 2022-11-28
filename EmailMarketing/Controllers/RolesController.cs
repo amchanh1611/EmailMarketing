@@ -40,7 +40,7 @@ namespace EmailMarketing.Controllers
         {
             return Ok(roleServices.Get(request));
         }
-        [HttpGet("PermissionOfRole/{roleId}")]
+        [HttpGet("Role/{roleId}/Permission")]
         public IActionResult PermissionOfRole([FromRoute] int roleId)
         {
             return Ok(roleServices.PermissionOfRole(roleId));

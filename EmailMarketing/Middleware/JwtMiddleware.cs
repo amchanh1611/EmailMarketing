@@ -22,17 +22,14 @@ namespace EmailMarketing.Middleware
             if (claim != null)
             {
                 int userId = int.Parse(claim.Value);
-                ProfileResponse user = userServices.GetProfile(userId, context);
+                UserDetailResponse user = userServices.GetProfile(userId, context);
                 if (user.Status == UserStatus.Lock)
                 {
                     context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     throw new UnauthorizedException("User has been locked");
                 }
             }
-            else
-            {
-                await next(context);
-            }
+            await next(context);
         }
     }
 }

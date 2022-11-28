@@ -33,13 +33,13 @@ namespace EmailMarketing.Middleware
         {
         }
     }
-    //public class InternalServerErrorException : ExceptionBase
-    //{
-    //    public InternalServerErrorException() : base()
-    //    {
+    public class InternalServerErrorException : ExceptionBase
+    {
+        public InternalServerErrorException(string message) : base(message)
+        {
 
-    //    }
-    //}
+        }
+    }
 
     public class ErrorResponseMiddleware
     {

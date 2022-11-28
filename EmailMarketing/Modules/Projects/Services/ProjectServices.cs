@@ -2,6 +2,7 @@
 using EmailMarketing.Common.Pagination;
 using EmailMarketing.Common.Search;
 using EmailMarketing.Common.Sort;
+using EmailMarketing.Middleware;
 using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Projects.Request;
 using EmailMarketing.Persistences.Repositories;
@@ -53,6 +54,8 @@ namespace EmailMarketing.Modules.Projects.Services
         public void Update(int projectId, UpdateProjectRequest request)
         {
             Project? project = repository.Project.FindByCondition(x => x.Id == projectId).FirstOrDefault();
+            if(project is null)
+                throw new BadRequestException("User does not exists in system");
             repository.Project.Update(mapper.Map(request, project!));
             repository.Save();
         }

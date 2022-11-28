@@ -1,8 +1,9 @@
-﻿using EmailMarketing.Modules.Users.Entities;
+﻿using EmailMarketing.Modules.Roles.Responses;
+using EmailMarketing.Modules.Users.Entities;
 
 namespace EmailMarketing.Modules.Users.Responses
 {
-    public class ProfileResponse
+    public class UserDetailResponse
     {
         public string? Name { get; set; }
         public string? Email { get; set; }
@@ -10,6 +11,6 @@ namespace EmailMarketing.Modules.Users.Responses
         public string? RoleName { get; set; }
         public string? Avatar { get; set; }
         public UserStatus Status { get; set; }
-        public List<string>? PermissionCode { get; set; } 
+        public List<PermissionResponse>? Permissions { get; set; } 
     }
 }

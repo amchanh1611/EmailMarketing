@@ -47,7 +47,7 @@ namespace EmailMarketing.Modules.Users.Requests
                 .EmailAddress().WithMessage("{PropertyName} is not valid")
                 .Must((_, email) =>
                 {
-                    return repository.User.FindByCondition(x => x.Email == email).Count() == 0;
+                    return !repository.User.FindByCondition(x => x.Email == email).Any();
                 }).WithMessage("{PropertyName} already exists");
 
             RuleFor(user => user.Name).NotEmpty().WithMessage("{PropertyName} is required");
@@ -82,12 +82,12 @@ namespace EmailMarketing.Modules.Users.Requests
               .EmailAddress().WithMessage("{PropertyName} is not valid")
               .Must((_, email) =>
               {
-                  string[] arrPath = httpContextAccessor.HttpContext!.Request.Path.ToString().Split("/");
-                  return repository.User.FindByCondition(x =>
+                  int userId = int.Parse(httpContextAccessor.HttpContext!.GetRouteValue("userId")!.ToString()!);
+                  return !repository.User.FindByCondition(x =>
                   x.Email == email.Trim()
                   &&
-                  x.Id != int.Parse(arrPath[arrPath.Length - 1]))
-                  .Count() == 0;
+                  x.Id != userId)
+                  .Any();
               }).WithMessage("{PropertyName} already exists");
             RuleFor(user => user.RoleId).NotNull().NotEqual(0).WithMessage("{PropertyName} is required")
                 .Must((_, roleId) =>
@@ -112,7 +112,7 @@ namespace EmailMarketing.Modules.Users.Requests
                 {
                     Claim? claim = httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier);
                     User? user = repository.User.FindByCondition(x => x.Id == (int.Parse(claim!.Value))).FirstOrDefault();
-                    return BC.Verify(user!.Password, oldPassword);
+                    return BC.Verify(oldPassword, user!.Password);
                 }).WithMessage("Incorrect {PropertyName}");
             RuleFor(user => user.NewPassword).NotEmpty().WithMessage("{PropertyName} is required")
               .MinimumLength(8).WithMessage("{PropertyName} is at least 8 charracter")

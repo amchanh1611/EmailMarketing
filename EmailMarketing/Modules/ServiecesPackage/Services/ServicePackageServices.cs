@@ -43,7 +43,7 @@ namespace EmailMarketing.Modules.ServiecesPackage.Services
         {
             return repository.ServicePackage.FindAll()
                 .ApplySearch(request.InfoSearch!)
-                .ApplySort(request.Orderby)
+                .ApplySort(request.Orderby is null ? "Quantity" : request.Orderby)
                 .ApplyPagging(request.Current, request.PageSize);
         }
 
