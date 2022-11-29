@@ -14,7 +14,7 @@ namespace EmailMarketing.Modules.Projects.Services
     {
         void Create(CreateProjectRequest request);
         void Update(int projectId,UpdateProjectRequest request);
-        void Delete(int projectId);
+        void Delete(int projectId, DeleteProjectRequest request);
         PaggingResponse<Project> Get(GetProjectRequest request);
 
     }
@@ -34,10 +34,10 @@ namespace EmailMarketing.Modules.Projects.Services
             repository.Save();
         }
 
-        public void Delete(int projectId)
+        public void Delete(int projectId, DeleteProjectRequest request)
         {
             Project? project = repository.Project.FindByCondition(x => x.Id == projectId).FirstOrDefault();
-            repository.Project.Delete(project);
+            repository.Project.Delete(project!);
             repository.Save();
         }
 

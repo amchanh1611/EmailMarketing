@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using EmailMarketing.Modules.Contacts.Entities;
+using EmailMarketing.Modules.Contacts.Request;
 using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Projects.Request;
 using EmailMarketing.Modules.Roles.Entities;
@@ -39,6 +41,14 @@ namespace EmailMarketing.Mapping
             //Project
             CreateMap<CreateProjectRequest, Project>();
             CreateMap<UpdateProjectRequest, Project>();
+            
+            //GroupContact
+            CreateMap<CreateGroupContactRequest, GroupContact>();
+            CreateMap<UpdateGroupContactRequest, GroupContact>();
+            
+            //Contact
+            CreateMap<CreateContactRequest, Contact>();
+            CreateMap<UpdateContactRequest, Contact>();
 
         }
     }

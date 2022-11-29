@@ -8,6 +8,8 @@ namespace EmailMarketing.Common.RepositoriesBase
         void Create(T entity);
         void Update(T entity);
         void Delete(T entity);
+        void CreateMulti(List<T> entities);
+        void DeleteMulti(List<T> entities);
         IQueryable<T> FindAll();
         IQueryable<T> FindByCondition(Expression<Func<T,bool>> expression);
     }
@@ -20,9 +22,13 @@ namespace EmailMarketing.Common.RepositoriesBase
             this.context = context;
         }
 
+        public void CreateMulti(List<T> entities) => context.Set<T>().AddRange(entities);
+
         public void Create(T entity) => context.Set<T>().Add(entity);
 
         public void Delete(T entity) => context.Set<T>().Remove(entity);
+
+        public void DeleteMulti(List<T> entities) => context.Set<T>().RemoveRange(entities);
 
         public IQueryable<T> FindAll() => context.Set<T>();
 

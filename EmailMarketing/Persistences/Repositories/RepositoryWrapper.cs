@@ -1,4 +1,5 @@
 ﻿using EmailMarketing.Common.RepositoriesBase;
+using EmailMarketing.Modules.Contacts.Entities;
 using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.ServiecesPackage.Enities;
@@ -8,23 +9,19 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace EmailMarketing.Persistences.Repositories
 {
-    public interface IUserRepository : IRepositoryBase<User>
-    { }
+    public interface IUserRepository : IRepositoryBase<User> { }
 
-    public interface IRoleRepository : IRepositoryBase<Role>
-    { }
+    public interface IRoleRepository : IRepositoryBase<Role> { }
 
-    public interface IPermissionRepository : IRepositoryBase<Permission>
-    { }
+    public interface IPermissionRepository : IRepositoryBase<Permission> { }
 
-    public interface IRolePermissionRepository : IRepositoryBase<RolePermission>
-    { }
+    public interface IRolePermissionRepository : IRepositoryBase<RolePermission> { }
 
-    public interface IServicePackageRepository : IRepositoryBase<ServicePackage>
-    { }
+    public interface IServicePackageRepository : IRepositoryBase<ServicePackage> { }
 
-    public interface IProjectRepository : IRepositoryBase<Project>
-    { }
+    public interface IProjectRepository : IRepositoryBase<Project> { }
+    public interface IGroupContactRepository : IRepositoryBase<GroupContact> { }
+    public interface IContactRepository : IRepositoryBase<Contact> { }
 
     public interface IRepositoryWrapper
     {
@@ -34,6 +31,8 @@ namespace EmailMarketing.Persistences.Repositories
         IPermissionRepository Permission { get; }
         IServicePackageRepository ServicePackage { get; }
         IProjectRepository Project { get; }
+        IGroupContactRepository GroupContact { get; }
+        IContactRepository Contact { get; }
 
         void Save();
 
@@ -42,44 +41,41 @@ namespace EmailMarketing.Persistences.Repositories
 
     public class UserRepository : RepositoryBase<User>, IUserRepository
     {
-        public UserRepository(AppDbContext context) : base(context)
-        {
-        }
+        public UserRepository(AppDbContext context) : base(context) { }
     }
 
     public class RoleRepository : RepositoryBase<Role>, IRoleRepository
     {
-        public RoleRepository(AppDbContext context) : base(context)
-        {
-        }
+        public RoleRepository(AppDbContext context) : base(context) { }
     }
 
     public class PermissionRepository : RepositoryBase<Permission>, IPermissionRepository
     {
-        public PermissionRepository(AppDbContext context) : base(context)
-        {
-        }
+        public PermissionRepository(AppDbContext context) : base(context) { }
     }
 
     public class RolePermissionRepository : RepositoryBase<RolePermission>, IRolePermissionRepository
     {
-        public RolePermissionRepository(AppDbContext context) : base(context)
-        {
-        }
+        public RolePermissionRepository(AppDbContext context) : base(context) { }
     }
 
     public class ServicePackageRepository : RepositoryBase<ServicePackage>, IServicePackageRepository
     {
-        public ServicePackageRepository(AppDbContext context) : base(context)
-        {
-        }
+        public ServicePackageRepository(AppDbContext context) : base(context) { }
     }
 
     public class ProjectRepository : RepositoryBase<Project>, IProjectRepository
     {
-        public ProjectRepository(AppDbContext context) : base(context)
-        {
-        }
+        public ProjectRepository(AppDbContext context) : base(context) { }
+    }
+    public class GroupContactRepository : RepositoryBase<GroupContact>,IGroupContactRepository
+    {
+        public GroupContactRepository(AppDbContext context) : base(context) { }
+    }
+
+    public class ContactRepository : RepositoryBase<Contact>,IContactRepository
+    {
+        public ContactRepository(AppDbContext context) : base(context) { }
     }
 
     public class RepositoryWrapper : IRepositoryWrapper
@@ -90,6 +86,8 @@ namespace EmailMarketing.Persistences.Repositories
         private IPermissionRepository permission;
         private IServicePackageRepository servicePackage;
         private IProjectRepository project;
+        private IGroupContactRepository groupContact;
+        private IContactRepository contact;
         private readonly AppDbContext context;
 
         public RepositoryWrapper(AppDbContext context)
@@ -165,6 +163,30 @@ namespace EmailMarketing.Persistences.Repositories
                     project = new ProjectRepository(context);
                 }
                 return project;
+            }
+        }
+
+        public IGroupContactRepository GroupContact
+        {
+            get
+            {
+                if(groupContact is null)
+                {
+                    groupContact = new GroupContactRepository(context);
+                }
+                return groupContact;
+            }
+        }
+
+        public IContactRepository Contact
+        {
+            get
+            {
+                if (contact is null)
+                {
+                    contact = new ContactRepository(context);
+                }
+                return contact;
             }
         }
 

@@ -3,6 +3,7 @@ using System;
 using EmailMarketing.Persistences.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,59 +11,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmailMarketing.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221129064636_AddUsedInModelProject")]
+    partial class AddUsedInModelProject
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "6.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
-
-            modelBuilder.Entity("EmailMarketing.Modules.Contact.Entities.Contact", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("GroupContactId")
-                        .HasColumnType("int");
-
-                    b.Property<sbyte?>("Male")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GroupContactId");
-
-                    b.ToTable("contact", (string)null);
-                });
-
-            modelBuilder.Entity("EmailMarketing.Modules.Contact.Entities.GroupContact", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("NumberContact")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("group_contact", (string)null);
-                });
 
             modelBuilder.Entity("EmailMarketing.Modules.Projects.Enities.Project", b =>
                 {
@@ -224,15 +181,6 @@ namespace EmailMarketing.Migrations
                     b.ToTable("user", (string)null);
                 });
 
-            modelBuilder.Entity("EmailMarketing.Modules.Contact.Entities.Contact", b =>
-                {
-                    b.HasOne("EmailMarketing.Modules.Contact.Entities.GroupContact", "GroupContact")
-                        .WithMany("Contacts")
-                        .HasForeignKey("GroupContactId");
-
-                    b.Navigation("GroupContact");
-                });
-
             modelBuilder.Entity("EmailMarketing.Modules.Projects.Enities.Project", b =>
                 {
                     b.HasOne("EmailMarketing.Modules.Users.Entities.User", "User")
@@ -280,11 +228,6 @@ namespace EmailMarketing.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("EmailMarketing.Modules.Contact.Entities.GroupContact", b =>
-                {
-                    b.Navigation("Contacts");
                 });
 
             modelBuilder.Entity("EmailMarketing.Modules.Roles.Entities.Permission", b =>

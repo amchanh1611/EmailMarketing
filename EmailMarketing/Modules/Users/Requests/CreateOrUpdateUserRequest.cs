@@ -12,7 +12,7 @@ namespace EmailMarketing.Modules.Users.Requests
         public string? Name { get; set; }
         public string? Password { get; set; }
         public string? Phone { get; set; }
-        public Male? Male { get; set; }
+        public UserMale? Male { get; set; }
         public int? RoleId { get; set; }
     }
 

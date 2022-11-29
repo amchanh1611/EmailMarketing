@@ -16,26 +16,26 @@ namespace EmailMarketing.Controllers
             this.projectServices = projectServices;
         }
         [HttpGet]
-        public IActionResult Get(GetProjectRequest request)
+        public IActionResult Get([FromQuery] GetProjectRequest request)
         {
             return Ok(projectServices.Get(request));
         }
         [HttpPost]
-        public IActionResult Create(CreateProjectRequest request)
+        public IActionResult Create([FromBody] CreateProjectRequest request)
         {
             projectServices.Create(request);
             return Ok();
         }
         [HttpPut("{projectId}")]
-        public IActionResult Update(int projectId, UpdateProjectRequest request)
+        public IActionResult Update([FromRoute] int projectId, [FromBody] UpdateProjectRequest request)
         {
             projectServices.Update(projectId, request);
             return Ok();
         }
         [HttpDelete("{projectId}")]
-        public IActionResult Delete(int projectId)
+        public IActionResult Delete([FromRoute] int projectId, [FromBody] DeleteProjectRequest request)
         {
-            projectServices.Delete(projectId);
+            projectServices.Delete(projectId,request);
             return Ok();
         }
     }

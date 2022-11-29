@@ -6,7 +6,7 @@ namespace EmailMarketing.Modules.Projects.Request
 {
     public class CreateOrUpdateProject
     {
-        public string? Name { get; set; } 
+        public string? Name { get; set; }
         public int? ServicePackageId { get; set; }
         public DateTime? DateStart { get; set; } = DateTime.Now;
         public DateTime? DateEnd { get; set; }
@@ -17,24 +17,27 @@ namespace EmailMarketing.Modules.Projects.Request
         public int? OwnerId { get; set; }
         public string? CodeContract { get; set; }
     }
-    public class UpdateProjectRequest : CreateOrUpdateProject { }
+    public class UpdateProjectRequest : CreateOrUpdateProject
+    {
+        public int? Used { get; set; }
+    }
     public class CreateOrUpdateProjectValidator : AbstractValidator<CreateOrUpdateProject>
     {
         public CreateOrUpdateProjectValidator(IRepositoryWrapper repository)
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("{PropertyName} is required");
-            
-            RuleFor(x=>x.ServicePackageId).NotNull().NotEqual(0).WithMessage("{PropertyName} is required")
+
+            RuleFor(x => x.ServicePackageId).NotNull().NotEqual(0).WithMessage("{PropertyName} is required")
                 .Must((_, packageId) =>
                 {
                     return repository.ServicePackage.FindByCondition(x => x.Id == packageId).Any();
                 }).WithMessage("{PropertyName} does not exists in system");
-            RuleFor(x=>x.DateStart).NotNull().WithMessage("{PropertyName} is required");
+            RuleFor(x => x.DateStart).NotNull().WithMessage("{PropertyName} is required");
             RuleFor(x => x.DateEnd).NotNull().WithMessage("{PropertyName} is required")
-                .GreaterThan(x=>x.DateStart).WithMessage("{PropertyName} greater than {ComparisonProperty}");
+                .GreaterThan(x => x.DateStart).WithMessage("{PropertyName} greater than {ComparisonProperty}");
             RuleFor(x => x.Status).NotNull().WithMessage("{PropertyName} is required")
                 .IsInEnum().WithMessage("Invalid {PropertyValue}");
-        } 
+        }
     }
     public class CreateProjectValidator : AbstractValidator<CreateProjectRequest>
     {
@@ -53,12 +56,17 @@ namespace EmailMarketing.Modules.Projects.Request
                 }).WithMessage("{PropertyName} already exists");
 
         }
-    } 
+    }
     public class UpdateProjectValidator : AbstractValidator<UpdateProjectRequest>
     {
-        public UpdateProjectValidator(IRepositoryWrapper repository)
+        public UpdateProjectValidator(IRepositoryWrapper repository,IHttpContextAccessor httpContextAccessor)
         {
             RuleFor(x => x).SetValidator(new CreateOrUpdateProjectValidator(repository));
+            RuleFor(x => x.Used).Must((_, used) =>
+            {
+                int projectId = int.Parse(httpContextAccessor.HttpContext!.GetRouteValue("projectId")!.ToString()!);
+                return repository.Project.FindByCondition(x => x.Id == projectId && x.Used <= used).Any();
+            }).WithMessage("Invalid number of close times used");
         }
     }
 }

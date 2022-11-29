@@ -13,7 +13,7 @@ namespace EmailMarketing.Modules.Users.Entities
         public string Password { get; set; } = default!;
         public int RoleId { get; set; }
         public string? Phone { get; set; }
-        public Male? Male { get; set; }
+        public UserMale? Male { get; set; } = UserMale.Other;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public UserStatus Status { get; set; } = UserStatus.Active;
         public string? Avatar { get; set; } 
@@ -26,7 +26,7 @@ namespace EmailMarketing.Modules.Users.Entities
         Active = 1,
         Lock = 2
     }
-    public enum Male
+    public enum UserMale
     {
         Male = 1,
         Female,

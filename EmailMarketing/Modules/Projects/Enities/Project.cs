@@ -10,6 +10,7 @@ namespace EmailMarketing.Modules.Projects.Enities
         public int OwnerId { get; set; }
         public string CodeContract { get; set; } = default!;
         public int ServicePackageId { get; set; }
+        public int Used { get; set; } = default!;
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime DateStart { get; set; }
         public DateTime DateEnd { get; set; }

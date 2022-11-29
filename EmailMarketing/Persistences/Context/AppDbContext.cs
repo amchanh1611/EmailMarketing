@@ -1,4 +1,5 @@
-﻿using EmailMarketing.Modules.Projects.Enities;
+﻿using EmailMarketing.Modules.Contacts.Entities;
+using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.ServiecesPackage.Enities;
 using EmailMarketing.Modules.Users.Entities;
@@ -19,6 +20,8 @@ namespace EmailMarketing.Persistences.Context
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<ServicePackage> ServicePackages { get; set; }
         public DbSet<Project> Projects { get; set; }
+        public DbSet<GroupContact> GroupContacts { get; set; }
+        public DbSet<Contact> Contacts { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entityBuilder =>
@@ -83,6 +86,23 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.HasOne(x => x.ServicePackage)
                 .WithMany(x => x.Projects)
                 .HasForeignKey(x => x.ServicePackageId);
+            });
+            modelBuilder.Entity<GroupContact>(entityBuilder =>
+            {
+                entityBuilder.ToTable(nameof(GroupContact).Underscore());
+                entityBuilder.HasKey(x => x.Id);
+                entityBuilder.Property(x => x.Name).HasColumnType("text");
+            });
+            modelBuilder.Entity<Contact>(entityBuilder =>
+            {
+                entityBuilder.ToTable(nameof(Contact).Underscore());
+                entityBuilder.HasKey(x => x.Id);
+                entityBuilder.Property(x => x.Name).HasColumnType("text");
+                entityBuilder.Property(x => x.Email).HasColumnType("text");
+                entityBuilder.Property(x => x.Male).HasColumnType("tinyint");
+                entityBuilder.HasOne(x => x.GroupContact)
+                .WithMany(x => x.Contacts)
+                .HasForeignKey(x => x.GroupContactId);
             });
         }
     }

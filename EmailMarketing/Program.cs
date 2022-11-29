@@ -2,6 +2,8 @@ using EmailMarketing.AppSetting;
 using EmailMarketing.Common.JWT;
 using EmailMarketing.Mapping;
 using EmailMarketing.Middleware;
+using EmailMarketing.Modules.Contacts.Services;
+using EmailMarketing.Modules.Projects.Services;
 using EmailMarketing.Modules.Roles.Services;
 using EmailMarketing.Modules.ServiecesPackage.Services;
 using EmailMarketing.Modules.Users.Services;
@@ -32,7 +34,9 @@ builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IRoleServices, RoleServices>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped<IServicePackageServices, ServicePackageServices>();
-
+builder.Services.AddScoped<IProjectServices, ProjectServices>();
+builder.Services.AddScoped<IGroupContactServices, GroupContactServices>();
+builder.Services.AddScoped<IContactServices, ContactServices>();
 //Appsettings
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 

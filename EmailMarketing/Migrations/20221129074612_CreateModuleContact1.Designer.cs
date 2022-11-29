@@ -3,6 +3,7 @@ using System;
 using EmailMarketing.Persistences.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmailMarketing.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221129074612_CreateModuleContact")]
+    partial class CreateModuleContact
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,11 +31,8 @@ namespace EmailMarketing.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("GroupContactId")
+                    b.Property<int>("GroupContactId")
                         .HasColumnType("int");
-
-                    b.Property<sbyte?>("Male")
-                        .HasColumnType("tinyint");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -228,7 +227,9 @@ namespace EmailMarketing.Migrations
                 {
                     b.HasOne("EmailMarketing.Modules.Contact.Entities.GroupContact", "GroupContact")
                         .WithMany("Contacts")
-                        .HasForeignKey("GroupContactId");
+                        .HasForeignKey("GroupContactId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("GroupContact");
                 });
