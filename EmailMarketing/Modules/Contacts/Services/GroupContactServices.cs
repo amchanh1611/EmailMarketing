@@ -10,8 +10,10 @@ namespace EmailMarketing.Modules.Contacts.Services
 {
     public interface IGroupContactServices
     {
-        void Create(CreateGroupContactRequest request);
-        PaggingResponse<GroupContact> Get(GetGroupContactRequest request);
+        void Create(int userId, CreateGroupContactRequest request);
+        void Update(int userId, int groupId, UpdateGroupContactRequest request);
+        void Delete(int userId, int groupId);
+        PaggingResponse<GroupContact> Get(int userId, GetGroupContactRequest request);
     }
     public class GroupContactServices : IGroupContactServices
     {
@@ -23,18 +25,34 @@ namespace EmailMarketing.Modules.Contacts.Services
             this.mapper = mapper;
         }
 
-        public void Create(CreateGroupContactRequest request)
+        public void Create(int userId, CreateGroupContactRequest request)
         {
-            repository.GroupContact.Create(mapper.Map<CreateGroupContactRequest, GroupContact>(request));
+            GroupContact groupContact = mapper.Map<CreateGroupContactRequest, GroupContact>(request);
+            groupContact.UserId = userId;
+            repository.GroupContact.Create(groupContact);
             repository.Save();
         }
 
-        public PaggingResponse<GroupContact> Get(GetGroupContactRequest request)
+        public void Delete(int userId, int groupId)
         {
-            return repository.GroupContact.FindAll()
+            GroupContact? groupContact = repository.GroupContact.FindByCondition(x => x.Id == groupId && x.UserId == userId).FirstOrDefault();
+            repository.GroupContact.Delete(groupContact!);
+            repository.Save();
+        }
+
+        public PaggingResponse<GroupContact> Get(int userId, GetGroupContactRequest request)
+        {
+            return repository.GroupContact.FindByCondition(x=>x.UserId==userId)
                 .ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby)
                 .ApplyPagging(request.Current, request.PageSize);
+        }
+
+        public void Update(int userId,int groupId, UpdateGroupContactRequest request)
+        {
+            GroupContact? groupContact = repository.GroupContact.FindByCondition(x => x.Id == groupId && x.UserId == userId).FirstOrDefault();
+            repository.GroupContact.Update(mapper.Map(request, groupContact!));
+            repository.Save();
         }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using EmailMarketing.Modules.Contacts.Request;
 using EmailMarketing.Modules.Contacts.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EmailMarketing.Controllers
 {
@@ -15,21 +17,27 @@ namespace EmailMarketing.Controllers
         {
             this.services = services;
         }
-        [HttpGet]
+        [HttpGet, Authorize]
         public IActionResult Get([FromQuery] GetContactRequest request)
         {
-            return Ok(services.Get(request));
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            return Ok(services.Get(userId, request));
         }
-        [HttpPost]
+        [HttpPost, Authorize]
         public IActionResult Create([FromBody] CreateContactRequest request)
         {
-            services.Create(request);
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            services.Create(userId, request);
             return Ok();
         }
-        [HttpPost("Excel")]
+        [HttpPost("Excel"), Authorize]
         public IActionResult CreateByExcel([FromForm] CreateContactByExcelRequest request)
         {
-            services.CreateByExcel(request);
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            services.CreateByExcel(userId, request);
             return Ok();
         }
     }

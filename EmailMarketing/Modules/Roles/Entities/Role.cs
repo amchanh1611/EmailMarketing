@@ -1,9 +1,11 @@
 ﻿using EmailMarketing.Modules.Users.Entities;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EmailMarketing.Modules.Roles.Entities
 {
     public class Role
     {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
         public string Name { get; set; } = default!;
         public UserType UserType { get; set; }

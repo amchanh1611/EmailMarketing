@@ -51,5 +51,11 @@ namespace EmailMarketing.Controllers
             roleServices.UpdateRole(roleId, request);
             return Ok();
         }
+        [HttpDelete]
+        public IActionResult Delete([FromBody] DeleteRoleRequest request)
+        {
+            roleServices.Delete(request);
+            return Ok();
+        }
     }
 }

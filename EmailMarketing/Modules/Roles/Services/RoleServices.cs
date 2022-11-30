@@ -20,6 +20,7 @@ namespace EmailMarketing.Modules.Roles.Services
         void CreatePermission(CreatePermissionRequest request);
 
         void UpdateRole(int roleId, UpdateRoleRequest request);
+        void Delete(DeleteRoleRequest request);
 
         PaggingResponse<Role> Get(GetRoleRequest request);
 
@@ -44,18 +45,14 @@ namespace EmailMarketing.Modules.Roles.Services
             using IDbContextTransaction transaction = repository.Transaction();
             try
             {
-                repository.Role.Create(mapper.Map<CreateRoleRequest, Role>(request));
+                Role role = repository.Role.Create(mapper.Map<CreateRoleRequest, Role>(request));
                 repository.Save();
 
-                Role? role = repository.Role.FindByCondition(x => x.Name == request.Name && x.UserType == request.UserType).FirstOrDefault();
+                repository.RolePermission.CreateMulti
+                    (
+                        request.PermissionCodes!.Select(x => new RolePermission { RoleId = role!.Id, PermissionCode = x }
+                    ).ToList());
 
-                List<RolePermission> rolePermissions = new();
-                foreach (string permissionCode in request.PermissionCodes!)
-                {
-                    rolePermissions.Add(new RolePermission { RoleId = role!.Id, PermissionCode = permissionCode });
-                }
-
-                repository.RolePermission.CreateMulti(rolePermissions);
                 repository.Save();
                 transaction.Commit();
             }
@@ -76,6 +73,13 @@ namespace EmailMarketing.Modules.Roles.Services
             }
             permission.UserType = userTypeBuilder.ToString().TrimEnd(',');
             repository.Permission.Create(permission);
+            repository.Save();
+        }
+
+        public void Delete(DeleteRoleRequest request)
+        {
+            List<Role> roles = repository.Role.FindByCondition(x => request.RoleIds!.Contains(x.Id)).ToList();
+            repository.Role.DeleteMulti(roles);
             repository.Save();
         }
 
@@ -111,7 +115,7 @@ namespace EmailMarketing.Modules.Roles.Services
                 {
                     RoleId = grp.Key,
                     Permissions = grp.Select(x => x.Permission)
-                    .GroupBy(x => x.Modules)
+                    .GroupBy(x => x!.Modules)
                     .Select(grp => new PermissionResponse
                     {
                         Modules = grp.Key,
@@ -126,41 +130,23 @@ namespace EmailMarketing.Modules.Roles.Services
             using IDbContextTransaction trans = repository.Transaction();
             try
             {
-                Role? role = repository.Role.FindByCondition(x => x.Id == roleId).FirstOrDefault();
+                Role? role = repository.Role.FindByCondition(x => x.Id == roleId).Include(x=>x.RolePermissions).FirstOrDefault();
+
                 if (role is null)
                     throw new Exception();
-                Role role1 = mapper.Map(request, role)!;
-                repository.Role.Update(role1);
-                
-                List<RolePermission> rolePermissionSystem = repository.RolePermission.FindByCondition(x => x.RoleId == roleId).ToList();
-                List<RolePermission> rolePermissionRequest = new();
 
-                foreach(string permissionCode in request.PermissionCodes!)
-                {
-                    rolePermissionRequest.Add(new RolePermission { RoleId = role.Id, PermissionCode = permissionCode });
-                }
-                List<RolePermission> rolePermissionAdd = rolePermissionRequest.Except(rolePermissionSystem).ToList();
-                List<RolePermission> rolePermissionRemove = rolePermissionSystem.Except(rolePermissionRequest).ToList();
+                role = repository.Role.Update(mapper.Map(request, role));
 
-                repository.RolePermission.CreateMulti(rolePermissionAdd);
-                repository.RolePermission.DeleteMulti(rolePermissionRemove);
-               // List<string> permissionOfRole = repository.RolePermission
-               //.FindByCondition(x => x.RoleId == roleId)
-               //.Select(x => x.PermissionCode).ToList()
-               //.ToList();
+                List<string> permissionOfRole = role.RolePermissions.Select(x => x.PermissionCode).ToList();
 
-               // List<string> lstAdd = request.PermissionCodes!.Except(permissionOfRole).ToList(); 
+                List<string> lstAdd = request.PermissionCodes!.Except(permissionOfRole).ToList();
 
-               // foreach (string permission in lstAdd)
-               // {
-               //     repository.RolePermission.Create(new RolePermission { RoleId = role!.Id, PermissionCode = permission });
-               // }
-               // List<string> lstRemove = permissionOfRole.Except(request.PermissionCodes!).ToList();
+                repository.RolePermission.CreateMulti(lstAdd.Select(x => new RolePermission { RoleId = role!.Id, PermissionCode = x }).ToList());
 
-               // foreach (string permission in lstRemove)
-               // {
-               //     repository.RolePermission.Delete(new RolePermission { RoleId=role!.Id,PermissionCode=permission});
-               // }
+                List<string> lstRemove = permissionOfRole.Except(request.PermissionCodes!).ToList();
+
+                repository.RolePermission.DeleteMulti(lstRemove.Select(x=> new RolePermission { RoleId= role!.Id,PermissionCode=x }).ToList());
+
                 repository.Save();
                 trans.Commit();
             }

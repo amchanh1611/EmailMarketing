@@ -20,5 +20,9 @@
         {
             return $"{context.Request.Scheme}://{context.Request.Host}/{path}";
         }
+        public static T ParseEnum<T>(this string value)
+        {
+            return (T)Enum.Parse(typeof(T), value, true);
+        }
     }
 }

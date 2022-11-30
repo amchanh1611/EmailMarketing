@@ -1,7 +1,9 @@
-﻿using EmailMarketing.Modules.Contacts.Request;
+﻿using DocumentFormat.OpenXml.Office2016.Excel;
+using EmailMarketing.Modules.Contacts.Request;
 using EmailMarketing.Modules.Contacts.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EmailMarketing.Controllers
 {
@@ -18,13 +20,33 @@ namespace EmailMarketing.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] CreateGroupContactRequest request)
         {
-            services.Create(request);
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            services.Create(userId, request);
             return Ok();
         }
         [HttpGet]
-        public IActionResult Get(GetGroupContactRequest request)
+        public IActionResult Get([FromQuery] GetGroupContactRequest request)
         {
-            return Ok(services.Get(request));
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            return Ok(services.Get(userId, request));
+        }
+        [HttpPut("{groupId}")]
+        public IActionResult Update([FromRoute] int groupId, [FromBody] UpdateGroupContactRequest request)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            services.Update(userId, groupId, request);
+            return Ok();
+        }
+        [HttpDelete("{groupId}")]
+        public IActionResult Delete([FromRoute] int groupId)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            services.Delete(userId, groupId);
+            return Ok();
         }
     }
 }

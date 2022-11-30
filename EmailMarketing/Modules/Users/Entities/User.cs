@@ -1,4 +1,5 @@
-﻿using EmailMarketing.Modules.Projects.Enities;
+﻿using EmailMarketing.Modules.Contacts.Entities;
+using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Roles.Entities;
 using System.Text.Json.Serialization;
 
@@ -19,6 +20,8 @@ namespace EmailMarketing.Modules.Users.Entities
         public string? Avatar { get; set; } 
         public Role? Role { get; set; }
         public ICollection<Project> Projects { get; set; } = default!;
+        public ICollection<GroupContact> GroupContacts { get; set; } = default!;
+        public ICollection<Contact> Contacts { get; set; } = default!;
     }
 
     public enum UserStatus

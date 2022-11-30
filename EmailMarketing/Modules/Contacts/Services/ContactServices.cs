@@ -1,23 +1,24 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Office2016.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using EmailMarketing.Common.Extensions;
 using EmailMarketing.Common.Pagination;
+using EmailMarketing.Common.ReadExelFile;
 using EmailMarketing.Common.Search;
 using EmailMarketing.Common.Sort;
 using EmailMarketing.Modules.Contacts.Entities;
 using EmailMarketing.Modules.Contacts.Request;
 using EmailMarketing.Persistences.Repositories;
-using ExcelDataReader;
-using System.Data;
-using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmailMarketing.Modules.Contacts.Services
 {
     public interface IContactServices
     {
-        void Create(CreateContactRequest request);
-        void CreateByExcel(CreateContactByExcelRequest request);
-        PaggingResponse<Contact> Get(GetContactRequest request);
+        void Create(int userId, CreateContactRequest request);
+        void CreateByExcel(int userId, CreateContactByExcelRequest request);
+        PaggingResponse<Contact> Get(int userId, GetContactRequest request);
     }
     public class ContactServices : IContactServices
     {
@@ -29,94 +30,64 @@ namespace EmailMarketing.Modules.Contacts.Services
             this.mapper = mapper;
         }
 
-        public void Create(CreateContactRequest request)
+        public void Create(int userId, CreateContactRequest request)
         {
-            repository.Contact.Create(mapper.Map<CreateContactRequest, Contact>(request));
+            Contact contact = mapper.Map<CreateContactRequest, Contact>(request);
+            contact.UserId = userId;
+            repository.Contact.Create(contact);
+
             repository.Save();
         }
 
-        //public void CreateByExcel(CreateContactByExcelRequest request)
-        //{
-        //    IExcelDataReader? reader = null;
-        //    Stream FileStream = new FileStream(request.File.FileName, FileMode.Create);
-        //    if (request.File.FileName.EndsWith(".xls"))
-        //        reader = ExcelReaderFactory.CreateBinaryReader(FileStream);
-        //    else
-        //    if (request.File.FileName.EndsWith(".xlsx"))
-        //        reader = ExcelReaderFactory.CreateOpenXmlReader(FileStream);
-
-        //    DataSet dsexcelRecords = reader.AsDataSet();
-        //}
-
-        public void CreateByExcel(CreateContactByExcelRequest request)
+        public void CreateByExcel(int userId, CreateContactByExcelRequest request)
         {
-            string path = Path.Combine(Directory.GetCurrentDirectory() ,request.File!.FileName);
-            //Stream fileStream = new FileStream(path, FileMode.Create);
-            Stream fileStream = new FileStream(request.File.FileName, FileMode.Create);
-            using SpreadsheetDocument doc = SpreadsheetDocument.Open(fileStream,false);
-            //create the object for workbook part  
-            WorkbookPart workbookPart = doc.WorkbookPart;
-            Sheets thesheetcollection = workbookPart.Workbook.GetFirstChild<Sheets>()!;
-            StringBuilder excelResult = new StringBuilder();
-            //using for each loop to get the sheet from the sheetcollection  
-            foreach (Sheet thesheet in thesheetcollection)
+            List<CreateContactRequest> createContacts = ReadExcelFile(request.File!);
+            List<Contact> contacts = mapper.Map<List<CreateContactRequest>, List<Contact>>(createContacts);
+            if (request.GroupContactId != null)
             {
-                excelResult.AppendLine("Excel Sheet Name : " + thesheet.Name);
-                excelResult.AppendLine("----------------------------------------------- ");
-                //statement to get the worksheet object by using the sheet id  
-                Worksheet theWorksheet = ((WorksheetPart)workbookPart.GetPartById(thesheet.Id)).Worksheet;
-
-                SheetData thesheetdata = (SheetData)theWorksheet.GetFirstChild<SheetData>();
-                foreach (Row thecurrentrow in thesheetdata)
+                foreach(Contact contact in contacts)
                 {
-                    foreach (Cell thecurrentcell in thecurrentrow)
-                    {
-                        //statement to take the integer value  
-                        string currentcellvalue = string.Empty;
-                        if (thecurrentcell.DataType != null)
-                        {
-                            if (thecurrentcell.DataType == CellValues.SharedString)
-                            {
-                                int id;
-                                if (Int32.TryParse(thecurrentcell.InnerText, out id))
-                                {
-                                    SharedStringItem item = workbookPart.SharedStringTablePart!.SharedStringTable.Elements<SharedStringItem>().ElementAt(id);
-                                    if (item.Text != null)
-                                    {
-                                        //code to take the string value  
-                                        excelResult.Append(item.Text.Text + " ");
-                                    }
-                                    else if (item.InnerText != null)
-                                    {
-                                        currentcellvalue = item.InnerText;
-                                    }
-                                    else if (item.InnerXml != null)
-                                    {
-                                        currentcellvalue = item.InnerXml;
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            excelResult.Append(Convert.ToInt16(thecurrentcell.InnerText) + " ");
-                        }
-                    }
-                    excelResult.AppendLine();
+                    contact.GroupContactId = request.GroupContactId;
+                    contact.UserId = userId;
                 }
-                excelResult.Append("");
-                Console.WriteLine(excelResult.ToString());
-                Console.ReadLine();
             }
+
+            repository.Contact.CreateMulti(contacts);
+            repository.Save();
         }
 
-
-        public PaggingResponse<Contact> Get(GetContactRequest request)
+        public PaggingResponse<Contact> Get(int userId, GetContactRequest request)
         {
-            return repository.Contact.FindAll()
+            var a = repository.Contact.FindByCondition(x => x.UserId == userId);
+            return repository.Contact.FindByCondition(x=>x.UserId==userId)
                 .ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby)
                 .ApplyPagging(request.Current, request.PageSize);
+        }
+        private List<CreateContactRequest> ReadExcelFile(IFormFile file)
+        {
+            using Stream fileStream = file.OpenReadStream();
+
+            using SpreadsheetDocument doc = SpreadsheetDocument.Open(fileStream, false);
+
+            WorkbookPart workbookPart = doc.WorkbookPart!;
+
+            SheetData sheetData = workbookPart.GetSheetData();
+
+            List<CreateContactRequest> createContacts = new();
+
+            foreach (Row row in sheetData)
+            {
+                if (row.RowIndex! == 1)
+                    continue;
+
+                CreateContactRequest contact = new();
+                contact.Name = sheetData.GetCell($"A{int.Parse(row.RowIndex!)}").GetCellValue(workbookPart);
+                contact.Email = sheetData.GetCell($"B{int.Parse(row.RowIndex!)}").GetCellValue(workbookPart);
+                contact.Male = sheetData.GetCell($"C{int.Parse(row.RowIndex!)}").GetCellValue(workbookPart).ParseEnum<ContactMale>();
+                createContacts.Add(contact);
+            }
+            return createContacts;
         }
     }
 }

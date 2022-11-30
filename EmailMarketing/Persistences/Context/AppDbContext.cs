@@ -37,7 +37,8 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.Property(x => x.Phone).HasColumnType("char(11)");
                 entityBuilder.HasOne(x => x.Role)
                 .WithMany(x => x.Users)
-                .HasForeignKey(x => x.RoleId);
+                .HasForeignKey(x => x.RoleId)
+                .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<Role>(entityBuilder =>
@@ -63,10 +64,12 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.HasKey(x => new { x.RoleId, x.PermissionCode });
                 entityBuilder.HasOne(x => x.Role)
                 .WithMany(x => x.RolePermissions)
-                .HasForeignKey(x => x.RoleId);
+                .HasForeignKey(x => x.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
                 entityBuilder.HasOne(x => x.Permission)
                 .WithMany(x => x.RolePermissions)
-                .HasForeignKey(x => x.PermissionCode);
+                .HasForeignKey(x => x.PermissionCode)
+                .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<ServicePackage>(entityBuilder =>
             {
@@ -82,16 +85,21 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.Property(x => x.CodeContract).HasColumnType("varchar(50)");
                 entityBuilder.HasOne(x => x.User)
                 .WithMany(x => x.Projects)
-                .HasForeignKey(x => x.OwnerId);
+                .HasForeignKey(x => x.OwnerId)
+                .OnDelete(DeleteBehavior.NoAction);
                 entityBuilder.HasOne(x => x.ServicePackage)
                 .WithMany(x => x.Projects)
-                .HasForeignKey(x => x.ServicePackageId);
+                .HasForeignKey(x => x.ServicePackageId)
+                .OnDelete(DeleteBehavior.NoAction);
             });
             modelBuilder.Entity<GroupContact>(entityBuilder =>
             {
                 entityBuilder.ToTable(nameof(GroupContact).Underscore());
                 entityBuilder.HasKey(x => x.Id);
                 entityBuilder.Property(x => x.Name).HasColumnType("text");
+                entityBuilder.HasOne(x => x.User)
+                .WithMany(x => x.GroupContacts)
+                .HasForeignKey(x => x.UserId);
             });
             modelBuilder.Entity<Contact>(entityBuilder =>
             {
@@ -102,7 +110,11 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.Property(x => x.Male).HasColumnType("tinyint");
                 entityBuilder.HasOne(x => x.GroupContact)
                 .WithMany(x => x.Contacts)
-                .HasForeignKey(x => x.GroupContactId);
+                .HasForeignKey(x => x.GroupContactId)
+                .OnDelete(DeleteBehavior.SetNull);
+                entityBuilder.HasOne(x => x.User)
+                .WithMany(x => x.Contacts)
+                .HasForeignKey(x => x.UserId);
             });
         }
     }

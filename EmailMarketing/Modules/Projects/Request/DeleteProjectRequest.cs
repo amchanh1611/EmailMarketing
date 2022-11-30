@@ -8,14 +8,16 @@ namespace EmailMarketing.Modules.Projects.Request
     {
     }
     public class DeleteProjectValidator : AbstractValidator<DeleteProjectRequest>
-    { 
+    {
         public DeleteProjectValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
         {
+            int projectId = int.Parse(httpContextAccessor.HttpContext!.GetRouteValue("projectId")!.ToString()!);
+            Project? project = repository.Project.FindByCondition(x => x.Id == projectId).FirstOrDefault();
             RuleFor(x => x).Must((_, requset) =>
             {
-                int projectId = int.Parse(httpContextAccessor.HttpContext!.GetRouteValue("projectId")!.ToString()!);
-                return !repository.Project.FindByCondition(x => x.Id == projectId && (x.DateStart <= DateTime.Now||x.DateEnd>=DateTime.Now)).Any();
-            }).WithMessage("The project has started");
+                return project != null;
+            }).WithMessage("User does not exist in system");
+            RuleFor(x => x).Must((_, requset) => { return project.DateStart < DateTime.Now; }).WithMessage("The project has started");
         }
     }
 }

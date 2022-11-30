@@ -14,6 +14,7 @@ namespace EmailMarketing.Modules.Contacts.Request
     public class CreateContactByExcelRequest
     {
         public IFormFile? File { get; set; }
+        public int? GroupContactId { get; set; } 
     }
     public class CreateContactRequest : CreateOrUpdateContact { }
     public class UpdateContactRequest : CreateOrUpdateContact { }

@@ -66,8 +66,7 @@ namespace EmailMarketing.Modules.Users.Services
         {
             IQueryable<User> response = repository.User.FindAll().Include(x => x.Role);
             if (request.Fillter != null)
-                 response = repository.User.FindAll().Include(x => x.Role)
-                    .Where(x => x.Role!.Name == request.Fillter);
+                 response = response.Where(x => x.Role!.Name == request.Fillter);
                 
             return response.ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby!)
