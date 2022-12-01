@@ -2,25 +2,6 @@
 
 xóa dự án nhớ check đã có dữ liệu gửi mail chưa  (để sau)
 
-dự án đã bắt dầu không được xóa   
 
-//Dat lại ten router PermissionOfRoute V
-//Sua lai getId in httpContext V
-//nên có thêm 1 api get user có type là khách hàng???????? them filler vao api get user V
-//RemoveRange() deleteMultiple
-//AddRange 
-//csv or exel
-
-thêm role phải có save dô mới lấy ra lại được Id của role mới vừa thêm????????????????
-Excep khong duoc ????????????????
-việc thêm vào một cái đã có rồi hiện ra thông báo là cái này đã muốn chèn cái định thêm thành cái đó?????thì gọi lại api update
-
-{
-  "name": "VietJet Booking Tool",
-  "servicePackageId": 4,
-  "dateStart": "2022-11-29T00:00:00",
-  "dateEnd": "2022-12-29T00:00:00",
-  "status": 1,
-  "ownerId": 3,
-  "codeContract": "ALTA-VJ-009"
-}
+//Seleact lai response get contact
+dem so lien he trong nhom phai tach thanh 1 api??????????

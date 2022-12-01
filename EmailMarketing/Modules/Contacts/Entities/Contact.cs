@@ -17,7 +17,6 @@ namespace EmailMarketing.Modules.Contacts.Entities
     {
         public int Id { get; set; }
         public string Name { get; set; } = default!;
-        public int NumberContact { get; set; } = default!;
         public int UserId { get; set; }
         public User? User { get; set; }
         public ICollection<Contact> Contacts { get; set; } = default!;

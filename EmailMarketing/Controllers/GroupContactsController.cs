@@ -40,12 +40,12 @@ namespace EmailMarketing.Controllers
             services.Update(userId, groupId, request);
             return Ok();
         }
-        [HttpDelete("{groupId}")]
-        public IActionResult Delete([FromRoute] int groupId)
+        [HttpDelete]
+        public IActionResult Delete([FromBody] DeleteGroupContactRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             int userId = int.Parse(claim!.Value);
-            services.Delete(userId, groupId);
+            services.Delete(userId, request);
             return Ok();
         }
     }

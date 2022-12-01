@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using DocumentFormat.OpenXml.Office2016.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using EmailMarketing.Common.Extensions;
@@ -10,7 +9,6 @@ using EmailMarketing.Common.Sort;
 using EmailMarketing.Modules.Contacts.Entities;
 using EmailMarketing.Modules.Contacts.Request;
 using EmailMarketing.Persistences.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace EmailMarketing.Modules.Contacts.Services
 {
@@ -18,7 +16,11 @@ namespace EmailMarketing.Modules.Contacts.Services
     {
         void Create(int userId, CreateContactRequest request);
         void CreateByExcel(int userId, CreateContactByExcelRequest request);
+        void Update(int userId, int contactId, UpdateContactRequest request);
+        void Delete(int userId, DeleteContactRequest request);
         PaggingResponse<Contact> Get(int userId, GetContactRequest request);
+        PaggingResponse<Contact> ContactInGroup(int userId, int groupId, GetContactInGroupRequest request);
+        //int CountContactInGroup(int userId, int groupId);
     }
     public class ContactServices : IContactServices
     {
@@ -28,6 +30,14 @@ namespace EmailMarketing.Modules.Contacts.Services
         {
             this.repository = repository;
             this.mapper = mapper;
+        }
+
+        public PaggingResponse<Contact> ContactInGroup(int userId, int groupId, GetContactInGroupRequest request)
+        {
+            return repository.Contact.FindByCondition(x => x.UserId == userId && x.GroupContactId == groupId)
+                .ApplySearch(request.InfoSearch!)
+                .ApplySort(request.Orderby)
+                .ApplyPagging(request.Current, request.PageSize);
         }
 
         public void Create(int userId, CreateContactRequest request)
@@ -45,7 +55,7 @@ namespace EmailMarketing.Modules.Contacts.Services
             List<Contact> contacts = mapper.Map<List<CreateContactRequest>, List<Contact>>(createContacts);
             if (request.GroupContactId != null)
             {
-                foreach(Contact contact in contacts)
+                foreach (Contact contact in contacts)
                 {
                     contact.GroupContactId = request.GroupContactId;
                     contact.UserId = userId;
@@ -56,14 +66,30 @@ namespace EmailMarketing.Modules.Contacts.Services
             repository.Save();
         }
 
+        public void Delete(int userId, DeleteContactRequest request)
+        {
+            List<Contact>? contact = repository.Contact
+                .FindByCondition(x => request.ids!.Contains(x.Id) && x.UserId == userId).ToList();
+            repository.Contact.DeleteMulti(contact!);
+            repository.Save();
+        }
+
         public PaggingResponse<Contact> Get(int userId, GetContactRequest request)
         {
             var a = repository.Contact.FindByCondition(x => x.UserId == userId);
-            return repository.Contact.FindByCondition(x=>x.UserId==userId)
+            return repository.Contact.FindByCondition(x => x.UserId == userId)
                 .ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby)
                 .ApplyPagging(request.Current, request.PageSize);
         }
+
+        public void Update(int userId, int contactId, UpdateContactRequest request)
+        {
+            Contact? contact = repository.Contact.FindByCondition(x => x.UserId == userId && x.Id == contactId).FirstOrDefault();
+            repository.Contact.Update(mapper.Map(request, contact)!);
+            repository.Save();
+        }
+
         private List<CreateContactRequest> ReadExcelFile(IFormFile file)
         {
             using Stream fileStream = file.OpenReadStream();

@@ -4,7 +4,9 @@ using EmailMarketing.Common.Search;
 using EmailMarketing.Common.Sort;
 using EmailMarketing.Modules.Contacts.Entities;
 using EmailMarketing.Modules.Contacts.Request;
+using EmailMarketing.Modules.Contacts.Response;
 using EmailMarketing.Persistences.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace EmailMarketing.Modules.Contacts.Services
 {
@@ -12,8 +14,8 @@ namespace EmailMarketing.Modules.Contacts.Services
     {
         void Create(int userId, CreateGroupContactRequest request);
         void Update(int userId, int groupId, UpdateGroupContactRequest request);
-        void Delete(int userId, int groupId);
-        PaggingResponse<GroupContact> Get(int userId, GetGroupContactRequest request);
+        void Delete(int userId, DeleteGroupContactRequest request);
+        PaggingResponse<GroupContactResponse> Get(int userId, GetGroupContactRequest request);
     }
     public class GroupContactServices : IGroupContactServices
     {
@@ -33,19 +35,22 @@ namespace EmailMarketing.Modules.Contacts.Services
             repository.Save();
         }
 
-        public void Delete(int userId, int groupId)
+        public void Delete(int userId, DeleteGroupContactRequest request)
         {
-            GroupContact? groupContact = repository.GroupContact.FindByCondition(x => x.Id == groupId && x.UserId == userId).FirstOrDefault();
-            repository.GroupContact.Delete(groupContact!);
+            List<GroupContact>? groupContact = repository.GroupContact
+                .FindByCondition(x => request.ids!.Contains(x.Id)  && x.UserId == userId).ToList();
+            repository.GroupContact.DeleteMulti(groupContact!);
             repository.Save();
         }
 
-        public PaggingResponse<GroupContact> Get(int userId, GetGroupContactRequest request)
+        public PaggingResponse<GroupContactResponse> Get(int userId, GetGroupContactRequest request)
         {
-            return repository.GroupContact.FindByCondition(x=>x.UserId==userId)
+            return repository.GroupContact.FindByCondition(x => x.UserId == userId)
+                .Include(x => x.Contacts)
+                .Select(x => new GroupContactResponse { Id = x.Id, Name = x.Name, NumberContact = x.Contacts.Count() })
                 .ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby)
-                .ApplyPagging(request.Current, request.PageSize);
+                .ApplyPagging(request.Current, request.PageSize); 
         }
 
         public void Update(int userId,int groupId, UpdateGroupContactRequest request)

@@ -40,5 +40,28 @@ namespace EmailMarketing.Controllers
             services.CreateByExcel(userId, request);
             return Ok();
         }
+        [HttpDelete, Authorize]
+        public IActionResult Delete([FromBody] DeleteContactRequest request)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            services.Delete(userId, request);
+            return Ok();
+        }
+        [HttpGet("GroupContact/{groupId}/Contact")]
+        public IActionResult ContactOfGroup([FromRoute] int groupId, [FromQuery] GetContactInGroupRequest request)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            return Ok(services.ContactInGroup(userId, groupId, request));
+        }
+        [HttpPut("{contactId}")]
+        public IActionResult Update([FromRoute] int contactId,[FromBody] UpdateContactRequest request)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            services.Update(userId, contactId, request);
+            return Ok();
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace EmailMarketing.Modules.Contacts.Request
         public CreateOrUpdateGroupContactValidator(IRepositoryWrapper repository)
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("{PropertyName} is required")
-                .Must((_, name) => { return !repository.GroupContact.FindByCondition(x => x.Name == name).Any(); })
+                .Must((_, name) => { return !repository.GroupContact.FindByCondition(x => x.Name == name!.Trim()).Any(); })
                 .WithMessage("{PropertyValue} already exist");
         }
     }
