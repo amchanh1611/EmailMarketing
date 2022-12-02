@@ -1,4 +1,5 @@
 using EmailMarketing.AppSetting;
+using EmailMarketing.Common.GoogleServices.Services;
 using EmailMarketing.Common.JWT;
 using EmailMarketing.Mapping;
 using EmailMarketing.Middleware;
@@ -70,6 +71,7 @@ builder.Services.AddScoped<IServicePackageServices, ServicePackageServices>();
 builder.Services.AddScoped<IProjectServices, ProjectServices>();
 builder.Services.AddScoped<IGroupContactServices, GroupContactServices>();
 builder.Services.AddScoped<IContactServices, ContactServices>();
+builder.Services.AddScoped<IGoogleServices, GoogleServices>();
 //Appsettings
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 

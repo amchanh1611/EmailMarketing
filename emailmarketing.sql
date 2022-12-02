@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 30, 2022 at 12:10 PM
+-- Generation Time: Dec 02, 2022 at 07:43 AM
 -- Server version: 10.4.25-MariaDB
 -- PHP Version: 8.1.10
 
@@ -36,8 +36,8 @@ INSERT INTO `contact` (`Id`, `Name`, `Email`, `Male`, `GroupContactId`, `UserId`
 -- Dumping data for table `group_contact`
 --
 
-INSERT INTO `group_contact` (`Id`, `Name`, `NumberContact`, `UserId`) VALUES
-(1, 'Demo', 0, 3);
+INSERT INTO `group_contact` (`Id`, `Name`, `UserId`) VALUES
+(1, 'Demo', 3);
 
 --
 -- Dumping data for table `permission`
@@ -144,7 +144,10 @@ INSERT INTO `__efmigrationshistory` (`MigrationId`, `ProductVersion`) VALUES
 ('20221129074936_CreateModuleContact', '6.0.11'),
 ('20221129075056_CreateModuleContact', '6.0.11'),
 ('20221129081913_GroupContactIdNullable', '6.0.11'),
-('20221130094310_Init', '6.0.11');
+('20221130094310_Init', '6.0.11'),
+('20221201044347_Init', '6.0.11'),
+('20221201085531_DeleteNumberContact', '6.0.11'),
+('20221202052447_CreateModelGoogleAccount', '6.0.11');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

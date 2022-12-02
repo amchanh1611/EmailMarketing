@@ -1,4 +1,6 @@
-﻿namespace EmailMarketing.Common.Extensions
+﻿using System.Text;
+
+namespace EmailMarketing.Common.Extensions
 {
     public static class Helper
     {
@@ -23,6 +25,27 @@
         public static T ParseEnum<T>(this string value)
         {
             return (T)Enum.Parse(typeof(T), value, true);
+        }
+        public static string Base64Encode(this string plainText)
+        {
+            byte[] inputByte = Encoding.UTF8.GetBytes(plainText);
+
+            return Convert.ToBase64String(inputByte).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        }
+        public static string Base64Decode(this string encodedData)
+        {
+            byte[] outputByte = Convert.FromBase64String(encodedData.Pad().Replace('-', '+').Replace('_', '/'));
+
+            return Encoding.UTF8.GetString(outputByte);
+        }
+        private static string Pad(this string text)
+        {
+            var padding = 3 - ((text.Length + 3) % 4);
+            if (padding == 0)
+            {
+                return text;
+            }
+            return text + new string('=', padding);
         }
     }
 }

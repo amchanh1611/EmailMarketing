@@ -1,11 +1,17 @@
-﻿using EmailMarketing.Common.JWT;
+﻿using EmailMarketing.AppSetting;
+using EmailMarketing.Common.Extensions;
+using EmailMarketing.Common.GoogleServices.Services;
+using EmailMarketing.Common.JWT;
 using EmailMarketing.Common.Pagination;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
 using EmailMarketing.Modules.Users.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Security.Claims;
+using System.Text.Json;
+using static EmailMarketing.Common.GoogleServices.Services.GoogleServices;
 
 namespace EmailMarketing.Controllers
 {
@@ -14,12 +20,14 @@ namespace EmailMarketing.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserServices userServices;
-
-        public UsersController(IUserServices userServices)
+        private readonly AppSettings appSettings;
+        private readonly IGoogleServices googleServices;
+        public UsersController(IUserServices userServices, IOptions<AppSettings> appSettings, IGoogleServices googleServices)
         {
             this.userServices = userServices;
+            this.appSettings = appSettings.Value;
+            this.googleServices = googleServices;
         }
-
         [HttpPost]
         public IActionResult Create([FromBody] CreateUserRequest request)
         {
@@ -92,6 +100,26 @@ namespace EmailMarketing.Controllers
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             userServices.UpdatePassword(int.Parse(claim!.Value), request);
             return Ok("Ok");
+        }
+        [HttpGet("AuthAccount"), Authorize]
+        public IActionResult AuthAccount()
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            State state = new State { UserId = userId };
+            string stateString = JsonSerializer.Serialize(state);
+            return Ok(googleServices.AuthUri(stateString.Base64Encode()));
+        }
+        [HttpGet("OAuth")]
+        public async Task<IActionResult> OAuthAsync([FromQuery] string code, [FromQuery] string state)
+        {
+            TokenResult tokenResult = await googleServices.TokenAsync(code);
+            UserInfoResult userInfo = await googleServices.UserInfoAsync(tokenResult.RefreshToken!);
+
+            string stateString = state.Base64Decode();
+            State stateObject = JsonSerializer.Deserialize<State>(stateString)!;
+            userServices.CreateGoogleAccount(tokenResult.RefreshToken!, stateObject.UserId, userInfo);
+            return Ok();
         }
     }
 }

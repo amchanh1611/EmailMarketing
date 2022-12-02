@@ -22,6 +22,7 @@ namespace EmailMarketing.Modules.Users.Entities
         public ICollection<Project> Projects { get; set; } = default!;
         public ICollection<GroupContact> GroupContacts { get; set; } = default!;
         public ICollection<Contact> Contacts { get; set; } = default!;
+        public ICollection<GoogleAccount> GoogleAccounts { get; set; } = default!;
     }
 
     public enum UserStatus

@@ -12,7 +12,7 @@ namespace EmailMarketing.Persistences.Context
     {
         public AppDbContext(DbContextOptions options) : base(options)
         {
-
+            ChangeTracker.LazyLoadingEnabled = false;
         }
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
@@ -22,6 +22,7 @@ namespace EmailMarketing.Persistences.Context
         public DbSet<Project> Projects { get; set; }
         public DbSet<GroupContact> GroupContacts { get; set; }
         public DbSet<Contact> Contacts { get; set; }
+        public DbSet<GoogleAccount> GoogleAccounts { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entityBuilder =>
@@ -115,6 +116,18 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.HasOne(x => x.User)
                 .WithMany(x => x.Contacts)
                 .HasForeignKey(x => x.UserId);
+            });
+            modelBuilder.Entity<GoogleAccount>(entityBuilder =>
+            {
+                entityBuilder.ToTable(nameof(GoogleAccount).Underscore());
+                entityBuilder.HasKey(x => x.Id);
+                entityBuilder.Property(x => x.Name).HasColumnType("Text");
+                entityBuilder.Property(x => x.Email).HasColumnType("Text");
+                entityBuilder.Property(x => x.RefreshToken).HasColumnType("varchar(512)");
+                entityBuilder.HasOne(x => x.User)
+                .WithMany(x => x.GoogleAccounts)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

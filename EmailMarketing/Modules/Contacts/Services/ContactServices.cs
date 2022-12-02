@@ -76,7 +76,6 @@ namespace EmailMarketing.Modules.Contacts.Services
 
         public PaggingResponse<Contact> Get(int userId, GetContactRequest request)
         {
-            var a = repository.Contact.FindByCondition(x => x.UserId == userId);
             return repository.Contact.FindByCondition(x => x.UserId == userId)
                 .ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby)

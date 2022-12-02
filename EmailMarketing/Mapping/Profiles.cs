@@ -9,6 +9,7 @@ using EmailMarketing.Modules.ServiecesPackage.Enities;
 using EmailMarketing.Modules.ServiecesPackage.Request;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
+using static EmailMarketing.Common.GoogleServices.Services.GoogleServices;
 using BC = BCrypt.Net.BCrypt;
 
 
@@ -20,11 +21,11 @@ namespace EmailMarketing.Mapping
         {
             //User
             CreateMap<CreateUserRequest, User>()
-                .ForMember(dest => dest.Password,src=> src.MapFrom(x => BC.HashPassword(x.Password)));
+                .ForMember(dest => dest.Password, src => src.MapFrom(x => BC.HashPassword(x.Password)));
             CreateMap<UpdateUser, User>();
             CreateMap<UpdateUserName, User>();
             CreateMap<UpdateUserPassword, User>()
-                .ForMember(dest=>dest.Password,src=>src.MapFrom(x=>BC.HashPassword(x.NewPassword)));
+                .ForMember(dest => dest.Password, src => src.MapFrom(x => BC.HashPassword(x.NewPassword)));
 
             //Role
             CreateMap<CreateRoleRequest, Role>();
@@ -41,14 +42,17 @@ namespace EmailMarketing.Mapping
             //Project
             CreateMap<CreateProjectRequest, Project>();
             CreateMap<UpdateProjectRequest, Project>();
-            
+
             //GroupContact
             CreateMap<CreateGroupContactRequest, GroupContact>();
             CreateMap<UpdateGroupContactRequest, GroupContact>();
-            
+
             //Contact
             CreateMap<CreateContactRequest, Contact>();
             CreateMap<UpdateContactRequest, Contact>();
+
+            //GoogleAccout
+            CreateMap<UserInfoResult, GoogleAccount>();
 
         }
     }

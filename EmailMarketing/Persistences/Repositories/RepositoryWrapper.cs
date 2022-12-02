@@ -22,6 +22,7 @@ namespace EmailMarketing.Persistences.Repositories
     public interface IProjectRepository : IRepositoryBase<Project> { }
     public interface IGroupContactRepository : IRepositoryBase<GroupContact> { }
     public interface IContactRepository : IRepositoryBase<Contact> { }
+    public interface IGoogleAccountRepository : IRepositoryBase<GoogleAccount> { }
 
     public interface IRepositoryWrapper
     {
@@ -33,6 +34,7 @@ namespace EmailMarketing.Persistences.Repositories
         IProjectRepository Project { get; }
         IGroupContactRepository GroupContact { get; }
         IContactRepository Contact { get; }
+        IGoogleAccountRepository GoogleAccount { get; }
 
         void Save();
 
@@ -77,7 +79,10 @@ namespace EmailMarketing.Persistences.Repositories
     {
         public ContactRepository(AppDbContext context) : base(context) { }
     }
-
+    public class GoogleAccountRepository : RepositoryBase<GoogleAccount>, IGoogleAccountRepository
+    {
+        public GoogleAccountRepository(AppDbContext context) : base(context) { }
+    }
     public class RepositoryWrapper : IRepositoryWrapper
     {
         private IUserRepository user;
@@ -88,6 +93,7 @@ namespace EmailMarketing.Persistences.Repositories
         private IProjectRepository project;
         private IGroupContactRepository groupContact;
         private IContactRepository contact;
+        private IGoogleAccountRepository googleAccount;
         private readonly AppDbContext context;
 
         public RepositoryWrapper(AppDbContext context)
@@ -187,6 +193,18 @@ namespace EmailMarketing.Persistences.Repositories
                     contact = new ContactRepository(context);
                 }
                 return contact;
+            }
+        }
+
+        public IGoogleAccountRepository GoogleAccount
+        {
+            get
+            {
+                if(googleAccount is null)
+                {
+                    googleAccount = new GoogleAccountRepository(context);
+                }
+                return googleAccount;
             }
         }
 

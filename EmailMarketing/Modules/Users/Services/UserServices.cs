@@ -11,21 +11,18 @@ using EmailMarketing.Modules.Users.Requests;
 using EmailMarketing.Modules.Users.Responses;
 using EmailMarketing.Persistences.Repositories;
 using Microsoft.EntityFrameworkCore;
+using static EmailMarketing.Common.GoogleServices.Services.GoogleServices;
 using BC = BCrypt.Net.BCrypt;
 
 namespace EmailMarketing.Modules.Users.Services
 {
     public interface IUserServices
     {
-        PaggingResponse<User> Get(GetUserRequest request);
-
         void Create(CreateUserRequest request);
 
         void Delete(int userId);
 
         void UpdateUser(int userId, UpdateUser request);
-
-        UserDetailResponse GetProfile(int userId,HttpContext context);
 
         string Login(string email, string password);
 
@@ -33,7 +30,13 @@ namespace EmailMarketing.Modules.Users.Services
 
         void UpdatePassword(int userId, UpdateUserPassword user);
 
+        void CreateGoogleAccount(string refreshToken, int userId, UserInfoResult userInfo);
+
+        UserDetailResponse GetProfile(int userId, HttpContext context);
+
         Task UpdateAvatarAsync(int userId, UpdateUserAvatar file);
+
+        PaggingResponse<User> Get(GetUserRequest request);
     }
 
     public class UserServices : IUserServices
@@ -55,6 +58,15 @@ namespace EmailMarketing.Modules.Users.Services
             repository.Save();
         }
 
+        public void CreateGoogleAccount(string refreshToken, int userId, UserInfoResult userInfo)
+        {
+            GoogleAccount googleAccount = mapper.Map<UserInfoResult, GoogleAccount>(userInfo);
+            googleAccount.RefreshToken = refreshToken;
+            googleAccount.UserId = userId;
+            repository.GoogleAccount.Create(googleAccount);
+            repository.Save();
+        }
+
         public void Delete(int userId)
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
@@ -66,24 +78,29 @@ namespace EmailMarketing.Modules.Users.Services
         {
             IQueryable<User> response = repository.User.FindAll().Include(x => x.Role);
             if (request.Fillter != null)
-                 response = response.Where(x => x.Role!.Name == request.Fillter);
-                
+                response = response.Where(x => x.Role!.Name == request.Fillter);
+
             return response.ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby!)
                 .ApplyPagging(request.Current, request.PageSize);
         }
 
-        public UserDetailResponse GetProfile(int userId,HttpContext context)
+        public UserDetailResponse GetProfile(int userId, HttpContext context)
         {
             UserDetailResponse profile = repository.User
                 .FindByCondition(x => x.Id == userId)
                 .Include(x => x.Role)
-                .ThenInclude(x=>x.RolePermissions)
-                .ThenInclude(x=>x.Permission)
+                .ThenInclude(x => x.RolePermissions)
+                .ThenInclude(x => x.Permission)
                 .ToList()
-                .Select(x=> new UserDetailResponse 
-                { 
-                    Email = x.Email, Name = x.Name,RoleId=x.RoleId,Avatar=x.Avatar,Status=x.Status,RoleName = x.Role!.Name,
+                .Select(x => new UserDetailResponse
+                {
+                    Email = x.Email,
+                    Name = x.Name,
+                    RoleId = x.RoleId,
+                    Avatar = x.Avatar,
+                    Status = x.Status,
+                    RoleName = x.Role!.Name,
                     Permissions = x.Role.RolePermissions.Select(x => x.Permission).GroupBy(key => key!.Modules)
                     .Select(grp => new PermissionResponse
                     {
@@ -108,7 +125,7 @@ namespace EmailMarketing.Modules.Users.Services
             if (user is null)
                 throw new BadRequestException("Incorrect email");
 
-            if(!BC.Verify(password, user.Password))
+            if (!BC.Verify(password, user.Password))
                 throw new BadRequestException("Incorrect password");
 
             return jwt.GenerateJwtToken(user);
@@ -119,7 +136,7 @@ namespace EmailMarketing.Modules.Users.Services
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
 
             user!.Avatar = await request.File!.UploadFilesAsync("Avatars");
-            
+
             repository.User.Update(user);
             repository.Save();
         }
