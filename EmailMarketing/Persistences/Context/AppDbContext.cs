@@ -1,4 +1,5 @@
 ﻿using EmailMarketing.Modules.Contacts.Entities;
+using EmailMarketing.Modules.Operations.Entities;
 using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.ServiecesPackage.Enities;
@@ -23,6 +24,7 @@ namespace EmailMarketing.Persistences.Context
         public DbSet<GroupContact> GroupContacts { get; set; }
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<GoogleAccount> GoogleAccounts { get; set; }
+        public DbSet<Operation> Operations { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entityBuilder =>
@@ -128,6 +130,30 @@ namespace EmailMarketing.Persistences.Context
                 .WithMany(x => x.GoogleAccounts)
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<Operation>(entityBuilder =>
+            {
+                entityBuilder.ToTable(nameof(Operation).Underscore());
+                entityBuilder.HasKey(x => x.Id);
+                entityBuilder.Property(x => x.Name).HasColumnType("text");
+                entityBuilder.Property(x => x.Subject).HasColumnType("text");
+                entityBuilder.Property(x => x.Content).HasColumnType("longtext");
+                entityBuilder.HasOne(x => x.Project)
+                .WithMany(x => x.Operations)
+                .HasForeignKey(x => x.ProjectId)
+                .OnDelete(DeleteBehavior.NoAction);
+                entityBuilder.HasOne(x => x.User)
+                .WithMany(x => x.Operations)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+                entityBuilder.HasOne(x => x.GoogleAccount)
+                .WithMany(x => x.Operations)
+                .HasForeignKey(x => x.GoogleAccountId)
+                .OnDelete(DeleteBehavior.NoAction);
+                entityBuilder.HasOne(x => x.GroupContact)
+                .WithMany(x => x.Operations)
+                .HasForeignKey(x => x.GroupContactId)
+                .OnDelete(DeleteBehavior.NoAction);
             });
         }
     }

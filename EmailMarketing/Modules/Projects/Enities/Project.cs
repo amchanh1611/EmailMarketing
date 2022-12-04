@@ -1,6 +1,6 @@
 ﻿using EmailMarketing.Modules.ServiecesPackage.Enities;
 using EmailMarketing.Modules.Users.Entities;
-
+using EmailMarketing.Modules.Operations.Entities;
 namespace EmailMarketing.Modules.Projects.Enities
 {
     public class Project
@@ -17,6 +17,7 @@ namespace EmailMarketing.Modules.Projects.Enities
         public ProjectStatus Status { get; set; } = ProjectStatus.Lock;
         public User User { get; set; } = default!;
         public ServicePackage ServicePackage { get; set; } = default!;
+        public ICollection<Operation> Operations { get; set; } = default!;
     }
 
     public enum ProjectStatus

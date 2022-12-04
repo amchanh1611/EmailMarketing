@@ -1,9 +1,10 @@
 using EmailMarketing.AppSetting;
-using EmailMarketing.Common.GoogleServices.Services;
+using EmailMarketing.Common.GoogleServices;
 using EmailMarketing.Common.JWT;
 using EmailMarketing.Mapping;
 using EmailMarketing.Middleware;
 using EmailMarketing.Modules.Contacts.Services;
+using EmailMarketing.Modules.Operations.Services;
 using EmailMarketing.Modules.Projects.Services;
 using EmailMarketing.Modules.Roles.Services;
 using EmailMarketing.Modules.ServiecesPackage.Services;
@@ -12,6 +13,8 @@ using EmailMarketing.Persistences.Context;
 using EmailMarketing.Persistences.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Hangfire;
+using Hangfire.MySql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -36,7 +39,7 @@ builder.Services.AddSwaggerGen(c =>
         Description = "QPIN API with ASP.NET Core 3.0",
         Contact = new OpenApiContact()
         {
-            Name = "Name Au Minh Canh",
+            Name = "Name Au Minh Chanh",
             Email = "am.chanh16111@gmail.com"
         }
     });
@@ -60,6 +63,18 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(securityRequirement);
 });
 
+//MySql
+builder.Services.AddDbContextPool<AppDbContext>(option =>
+    option.UseMySql(builder.Configuration["Appsettings:Database:ConnectionString"],
+    ServerVersion.AutoDetect(builder.Configuration["Appsettings:Database:ConnectionString"])));
+
+//Hangfire
+builder.Services.AddHangfire
+    (x => x.UseStorage(
+        new MySqlStorage("server=localhost;database=emailmarketing;uid=root;pwd='';Allow User Variables=True",
+        new MySqlStorageOptions())));
+builder.Services.AddHangfireServer(options => builder.Configuration.GetSection("AppSettings:HangfireSettings:Server").Bind(options));
+
 //Repository
 builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 
@@ -71,7 +86,9 @@ builder.Services.AddScoped<IServicePackageServices, ServicePackageServices>();
 builder.Services.AddScoped<IProjectServices, ProjectServices>();
 builder.Services.AddScoped<IGroupContactServices, GroupContactServices>();
 builder.Services.AddScoped<IContactServices, ContactServices>();
-builder.Services.AddScoped<IGoogleServices, GoogleServices>();
+builder.Services.AddScoped<IGoogleServices, GoogleService>();
+builder.Services.AddScoped<IOperationServices, OperationServices>();
+
 //Appsettings
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
@@ -106,11 +123,6 @@ builder.Services.AddAuthentication(option =>
         };
     });
 
-//ConnectionString
-
-builder.Services.AddDbContextPool<AppDbContext>(option =>
-    option.UseMySql(builder.Configuration["Appsettings:Database:ConnectionString"],
-    ServerVersion.AutoDetect(builder.Configuration["Appsettings:Database:ConnectionString"])));
 
 var app = builder.Build();
 
@@ -133,6 +145,9 @@ app.UseMiddleware<JwtMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+//Hangfire
+app.UseHangfireDashboard();
 
 //StaticFile
 app.UseStaticFiles();

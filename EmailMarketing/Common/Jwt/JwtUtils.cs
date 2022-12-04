@@ -27,7 +27,7 @@ namespace EmailMarketing.Common.JWT
             // generate token that is valid for 7 days
             JwtSecurityTokenHandler tokenHandler = new();
             byte[] key = Encoding.ASCII.GetBytes(appSettings!.Jwt!.Key!);
-            var tokenDescriptor = new SecurityTokenDescriptor
+            SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
                 Issuer = appSettings.Jwt.Issuer,
                 Subject = new ClaimsIdentity(new[]
@@ -38,21 +38,23 @@ namespace EmailMarketing.Common.JWT
                 Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
+
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
-    }
-    public class UserLogin
-    {
-        public string? Email { get; set; }
-        public string? Password { get; set; }
-    }
-    public class UserLoginValidator : AbstractValidator<UserLogin>
-    {
-        public UserLoginValidator()
+
+        public class UserLogin
         {
-            RuleFor(user => user.Email).NotEmpty().WithMessage("{PropertyName} is required");
-            RuleFor(user => user.Password).NotEmpty().WithMessage("{PropertyName} is required");
+            public string? Email { get; set; }
+            public string? Password { get; set; }
+        }
+        public class UserLoginValidator : AbstractValidator<UserLogin>
+        {
+            public UserLoginValidator()
+            {
+                RuleFor(user => user.Email).NotEmpty().WithMessage("{PropertyName} is required");
+                RuleFor(user => user.Password).NotEmpty().WithMessage("{PropertyName} is required");
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ using EmailMarketing.Modules.Users.Requests;
 using EmailMarketing.Modules.Users.Responses;
 using EmailMarketing.Persistences.Repositories;
 using Microsoft.EntityFrameworkCore;
-using static EmailMarketing.Common.GoogleServices.Services.GoogleServices;
+using static EmailMarketing.Common.GoogleServices.GoogleService;
 using BC = BCrypt.Net.BCrypt;
 
 namespace EmailMarketing.Modules.Users.Services
@@ -22,7 +22,7 @@ namespace EmailMarketing.Modules.Users.Services
 
         void Delete(int userId);
 
-        void UpdateUser(int userId, UpdateUser request);
+        void Update(int userId, UpdateUser request);
 
         string Login(string email, string password);
 
@@ -31,6 +31,13 @@ namespace EmailMarketing.Modules.Users.Services
         void UpdatePassword(int userId, UpdateUserPassword user);
 
         void CreateGoogleAccount(string refreshToken, int userId, UserInfoResult userInfo);
+
+        void EditPosition(int userId, int googleId, string position);
+        void DeleteGoogleAccount(int userId, DeleteGoogleAccountRequest request);
+
+        PaggingResponse<GoogleAccount> GetGoogleAccout(int userId, GetGoogleAccountRequest request);
+
+        GoogleAccount GetDetailGoogleAccount(int userId, int googleId);
 
         UserDetailResponse GetProfile(int userId, HttpContext context);
 
@@ -70,7 +77,23 @@ namespace EmailMarketing.Modules.Users.Services
         public void Delete(int userId)
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
+
+            if (user is null)
+                throw new BadRequestException("User doest not exist in system");
+
             repository.User.Delete(user!);
+            repository.Save();
+        }
+
+        public void EditPosition(int userId, int googleId, string position)
+        {
+            GoogleAccount? googleAccount = repository.GoogleAccount.FindByCondition(x => x.Id == googleId && x.UserId == userId).FirstOrDefault();
+
+            if (googleAccount is null)
+                throw new BadRequestException("GoogleAccount does not exist in system");
+
+            googleAccount!.Position = position;
+            repository.GoogleAccount.Update(googleAccount);
             repository.Save();
         }
 
@@ -83,6 +106,19 @@ namespace EmailMarketing.Modules.Users.Services
             return response.ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby!)
                 .ApplyPagging(request.Current, request.PageSize);
+        }
+
+        public GoogleAccount GetDetailGoogleAccount(int userId, int googleId)
+        {
+            return repository.GoogleAccount.FindByCondition(x => x.Id == googleId && x.UserId == userId).FirstOrDefault()!;
+        }
+
+        public PaggingResponse<GoogleAccount> GetGoogleAccout(int userId, GetGoogleAccountRequest request)
+        {
+            return repository.GoogleAccount.FindByCondition(x => x.UserId == userId)
+                    .ApplySearch(request.InfoSearch!)
+                    .ApplySort(request.Orderby)
+                    .ApplyPagging(request.Current, request.PageSize);
         }
 
         public UserDetailResponse GetProfile(int userId, HttpContext context)
@@ -110,7 +146,6 @@ namespace EmailMarketing.Modules.Users.Services
                 })
                 .FirstOrDefault()!;
 
-            //Bỏ dòng này vì chắc chắnn có
             if (profile is null)
                 throw new BadRequestException("User doest not exist in system");
 
@@ -135,6 +170,9 @@ namespace EmailMarketing.Modules.Users.Services
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
 
+            if (user is null)
+                throw new BadRequestException("User doest not exist in system");
+
             user!.Avatar = await request.File!.UploadFilesAsync("Avatars");
 
             repository.User.Update(user);
@@ -145,6 +183,9 @@ namespace EmailMarketing.Modules.Users.Services
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
 
+            if (user is null)
+                throw new BadRequestException("User doest not exist in system");
+
             repository.User.Update(mapper.Map(request, user!));
             repository.Save();
         }
@@ -152,11 +193,15 @@ namespace EmailMarketing.Modules.Users.Services
         public void UpdatePassword(int userId, UpdateUserPassword request)
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
+
+            if (user is null)
+                throw new BadRequestException("User doest not exist in system");
+
             repository.User.Update(mapper.Map(request, user!));
             repository.Save();
         }
 
-        public void UpdateUser(int userId, UpdateUser request)
+        public void Update(int userId, UpdateUser request)
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
 
@@ -164,6 +209,13 @@ namespace EmailMarketing.Modules.Users.Services
                 throw new BadRequestException("User does not in system");
 
             repository.User.Update(mapper.Map(request, user!));
+            repository.Save();
+        }
+
+        public void DeleteGoogleAccount(int userId, DeleteGoogleAccountRequest request)
+        {
+            List<GoogleAccount> googleAccount = repository.GoogleAccount.FindByCondition(x => request.GoogleAccountId!.Contains(x.Id) && x.UserId == userId).ToList();
+            repository.GoogleAccount.DeleteMulti(googleAccount);
             repository.Save();
         }
     }

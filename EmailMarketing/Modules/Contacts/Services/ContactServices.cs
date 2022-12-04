@@ -20,7 +20,6 @@ namespace EmailMarketing.Modules.Contacts.Services
         void Delete(int userId, DeleteContactRequest request);
         PaggingResponse<Contact> Get(int userId, GetContactRequest request);
         PaggingResponse<Contact> ContactInGroup(int userId, int groupId, GetContactInGroupRequest request);
-        //int CountContactInGroup(int userId, int groupId);
     }
     public class ContactServices : IContactServices
     {

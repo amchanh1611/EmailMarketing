@@ -16,7 +16,7 @@ namespace EmailMarketing.Modules.Projects.Services
         void Update(int projectId,UpdateProjectRequest request);
         void Delete(int projectId, DeleteProjectRequest request);
         PaggingResponse<Project> Get(GetProjectRequest request);
-
+        PaggingResponse<Project> GetByUser(int userId, GetProjectRequest request);
     }
     public class ProjectServices : IProjectServices
     {
@@ -44,6 +44,16 @@ namespace EmailMarketing.Modules.Projects.Services
         public PaggingResponse<Project> Get(GetProjectRequest request)
         {
             return repository.Project.FindAll()
+                .Include(x => x.User)
+                .Include(x => x.ServicePackage)
+                .ApplySearch(request.InfoSearch!)
+                .ApplySort(request.Orderby)
+                .ApplyPagging(request.Current, request.PageSize);
+        }
+
+        public PaggingResponse<Project> GetByUser(int userId, GetProjectRequest request)
+        {
+            return repository.Project.FindByCondition(x=>x.OwnerId==userId)
                 .Include(x => x.User)
                 .Include(x => x.ServicePackage)
                 .ApplySearch(request.InfoSearch!)

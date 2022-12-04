@@ -16,6 +16,7 @@ namespace EmailMarketing.Modules.Contacts.Services
         void Update(int userId, int groupId, UpdateGroupContactRequest request);
         void Delete(int userId, DeleteGroupContactRequest request);
         PaggingResponse<GroupContactResponse> Get(int userId, GetGroupContactRequest request);
+        GroupContact GetDetail(int userId, int groupId);
     }
     public class GroupContactServices : IGroupContactServices
     {
@@ -51,6 +52,11 @@ namespace EmailMarketing.Modules.Contacts.Services
                 .ApplySearch(request.InfoSearch!)
                 .ApplySort(request.Orderby)
                 .ApplyPagging(request.Current, request.PageSize); 
+        }
+
+        public GroupContact GetDetail(int userId, int groupId)
+        {
+            return repository.GroupContact.FindByCondition(x => x.Id == groupId && x.UserId == userId).Include(x => x.Contacts).FirstOrDefault()!;
         }
 
         public void Update(int userId,int groupId, UpdateGroupContactRequest request)

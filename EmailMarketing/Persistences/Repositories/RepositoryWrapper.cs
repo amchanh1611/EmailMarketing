@@ -1,5 +1,6 @@
 ﻿using EmailMarketing.Common.RepositoriesBase;
 using EmailMarketing.Modules.Contacts.Entities;
+using EmailMarketing.Modules.Operations.Entities;
 using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Roles.Entities;
 using EmailMarketing.Modules.ServiecesPackage.Enities;
@@ -23,6 +24,7 @@ namespace EmailMarketing.Persistences.Repositories
     public interface IGroupContactRepository : IRepositoryBase<GroupContact> { }
     public interface IContactRepository : IRepositoryBase<Contact> { }
     public interface IGoogleAccountRepository : IRepositoryBase<GoogleAccount> { }
+    public interface IOperationRepository : IRepositoryBase<Operation> { }
 
     public interface IRepositoryWrapper
     {
@@ -35,10 +37,15 @@ namespace EmailMarketing.Persistences.Repositories
         IGroupContactRepository GroupContact { get; }
         IContactRepository Contact { get; }
         IGoogleAccountRepository GoogleAccount { get; }
-
+        IOperationRepository Operation { get; }
         void Save();
 
         IDbContextTransaction Transaction();
+    }
+
+    public class OperationRepository : RepositoryBase<Operation>, IOperationRepository
+    {
+        public OperationRepository(AppDbContext context) : base(context) { }
     }
 
     public class UserRepository : RepositoryBase<User>, IUserRepository
@@ -94,6 +101,7 @@ namespace EmailMarketing.Persistences.Repositories
         private IGroupContactRepository groupContact;
         private IContactRepository contact;
         private IGoogleAccountRepository googleAccount;
+        private IOperationRepository operation;
         private readonly AppDbContext context;
 
         public RepositoryWrapper(AppDbContext context)
@@ -205,6 +213,18 @@ namespace EmailMarketing.Persistences.Repositories
                     googleAccount = new GoogleAccountRepository(context);
                 }
                 return googleAccount;
+            }
+        }
+
+        public IOperationRepository Operation
+        {
+            get
+            {
+                if(operation is null)
+                {
+                    operation = new OperationRepository(context);
+                }
+                return operation;
             }
         }
 

@@ -1,6 +1,6 @@
 ﻿using EmailMarketing.AppSetting;
 using EmailMarketing.Common.Extensions;
-using EmailMarketing.Common.GoogleServices.Services;
+using EmailMarketing.Common.GoogleServices;
 using EmailMarketing.Common.JWT;
 using EmailMarketing.Common.Pagination;
 using EmailMarketing.Modules.Users.Entities;
@@ -11,7 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Json;
-using static EmailMarketing.Common.GoogleServices.Services.GoogleServices;
+using static EmailMarketing.Common.GoogleServices.GoogleService;
+using static EmailMarketing.Common.JWT.JwtUtils;
 
 namespace EmailMarketing.Controllers
 {
@@ -52,7 +53,7 @@ namespace EmailMarketing.Controllers
             return Ok(userServices.GetProfile(int.Parse(claim!.Value), context));
         }
         [HttpGet("{userId}")]
-        public IActionResult GetProfile([FromRoute] int userId)
+        public IActionResult GetDetail([FromRoute] int userId)
         {
             HttpContext context = HttpContext;
             return Ok(userServices.GetProfile(userId, context));
@@ -68,7 +69,7 @@ namespace EmailMarketing.Controllers
         [HttpPut("{userId}")]
         public IActionResult UpdateUser([FromRoute] int userId, [FromBody] UpdateUser request)
         {
-            userServices.UpdateUser(userId, request);
+            userServices.Update(userId, request);
             return Ok();
         }
 
@@ -119,6 +120,29 @@ namespace EmailMarketing.Controllers
             string stateString = state.Base64Decode();
             State stateObject = JsonSerializer.Deserialize<State>(stateString)!;
             userServices.CreateGoogleAccount(tokenResult.RefreshToken!, stateObject.UserId, userInfo);
+            return Ok();
+        }
+        [HttpGet("GoogleAccount"), Authorize]
+        public IActionResult GetGoogleAccount([FromQuery] GetGoogleAccountRequest request)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            return Ok(userServices.GetGoogleAccout(userId, request));
+        }
+        [HttpPut("GoogleAccount/{googleId}/Position"), Authorize]
+        public IActionResult EditPosition([FromRoute] int googleId, [FromBody] string position)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            userServices.EditPosition(userId, googleId, position);
+            return Ok();
+        }
+        [HttpDelete("GoogleAccount"), Authorize]
+        public IActionResult DeleGoogleAccount([FromBody] DeleteGoogleAccountRequest request)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            userServices.DeleteGoogleAccount(userId, request);
             return Ok();
         }
     }

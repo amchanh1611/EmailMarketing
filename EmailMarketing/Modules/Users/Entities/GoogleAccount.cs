@@ -1,4 +1,6 @@
-﻿namespace EmailMarketing.Modules.Users.Entities
+﻿using EmailMarketing.Modules.Operations.Entities;
+
+namespace EmailMarketing.Modules.Users.Entities
 {
     public class GoogleAccount
     {
@@ -7,7 +9,9 @@
         public string Email { get; set; } = default!;
         public string RefreshToken { get; set; } = default!;
         public int UserId { get; set; }
+        public string? Position { get; set; }
         public User User { get; set; } = default!;
+        public ICollection<Operation> Operations { get; set; } = default!;
     }
     public class State
     {

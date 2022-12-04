@@ -2,6 +2,7 @@
 using EmailMarketing.Modules.Projects.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EmailMarketing.Controllers
 {
@@ -19,6 +20,13 @@ namespace EmailMarketing.Controllers
         public IActionResult Get([FromQuery] GetProjectRequest request)
         {
             return Ok(projectServices.Get(request));
+        }
+        [HttpGet("User/Project")]
+        public IActionResult GetByUser([FromQuery] GetProjectRequest request)
+        {
+            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            int userId = int.Parse(claim!.Value);
+            return Ok(projectServices.GetByUser(userId, request));
         }
         [HttpPost]
         public IActionResult Create([FromBody] CreateProjectRequest request)

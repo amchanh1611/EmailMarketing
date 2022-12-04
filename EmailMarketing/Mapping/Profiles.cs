@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using EmailMarketing.Modules.Contacts.Entities;
 using EmailMarketing.Modules.Contacts.Request;
+using EmailMarketing.Modules.Operations.Entities;
+using EmailMarketing.Modules.Operations.Request;
 using EmailMarketing.Modules.Projects.Enities;
 using EmailMarketing.Modules.Projects.Request;
 using EmailMarketing.Modules.Roles.Entities;
@@ -9,7 +11,7 @@ using EmailMarketing.Modules.ServiecesPackage.Enities;
 using EmailMarketing.Modules.ServiecesPackage.Request;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
-using static EmailMarketing.Common.GoogleServices.Services.GoogleServices;
+using static EmailMarketing.Common.GoogleServices.GoogleService;
 using BC = BCrypt.Net.BCrypt;
 
 
@@ -53,6 +55,9 @@ namespace EmailMarketing.Mapping
 
             //GoogleAccout
             CreateMap<UserInfoResult, GoogleAccount>();
+
+            //Operation
+            CreateMap<CreateOperationRequest, Operation>();
 
         }
     }

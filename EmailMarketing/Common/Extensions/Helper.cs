@@ -1,9 +1,20 @@
-﻿using System.Text;
+﻿using MimeKit;
+using System.Text;
+using static EmailMarketing.Common.GoogleServices.GoogleService;
 
 namespace EmailMarketing.Common.Extensions
 {
     public static class Helper
     {
+        public static MimeMessage CreateMimeMessage(this Message message)
+        {
+            MimeMessage emailMessage = new();
+            emailMessage.From.Add(new MailboxAddress("EmailMarketing ", message.From));
+            emailMessage.To.AddRange(message.To);
+            emailMessage.Subject = message.Subject;
+            emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text) { Text = message.Content };
+            return emailMessage;
+        }
         public static async Task<string> UploadFilesAsync(this IFormFile file, string path)
         {
 

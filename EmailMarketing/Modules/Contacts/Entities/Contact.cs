@@ -1,5 +1,5 @@
 ﻿using EmailMarketing.Modules.Users.Entities;
-
+using EmailMarketing.Modules.Operations.Entities;
 namespace EmailMarketing.Modules.Contacts.Entities
 {
     public class Contact
@@ -20,6 +20,7 @@ namespace EmailMarketing.Modules.Contacts.Entities
         public int UserId { get; set; }
         public User? User { get; set; }
         public ICollection<Contact> Contacts { get; set; } = default!;
+        public ICollection<Operation> Operations { get; set; } = default!;
     }
     public enum ContactMale
     {

@@ -11,6 +11,7 @@ namespace EmailMarketing.Modules.Users.Responses
         public string? RoleName { get; set; }
         public string? Avatar { get; set; }
         public UserStatus Status { get; set; }
+        public string? RefreshToken { get; set; }
         public List<PermissionResponse>? Permissions { get; set; } 
     }
 }
