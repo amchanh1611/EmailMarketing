@@ -1,14 +1,8 @@
-﻿using EmailMarketing.Common.GoogleServices;
-using EmailMarketing.Modules.Contacts.Entities;
-using EmailMarketing.Modules.Contacts.Services;
-using EmailMarketing.Modules.Operations.Entities;
+﻿using EmailMarketing.Modules.Operations.Entities;
 using EmailMarketing.Modules.Operations.Request;
 using EmailMarketing.Modules.Operations.Services;
-using EmailMarketing.Modules.Users.Entities;
-using EmailMarketing.Modules.Users.Services;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -19,17 +13,10 @@ namespace EmailMarketing.Controllers
     public class OperationsController : ControllerBase
     {
         private readonly IOperationServices services;
-        private readonly IUserServices userServices;
-        private readonly IGroupContactServices groupContactServices;
-        private readonly IGoogleServices googleServices;
         private readonly IBackgroundJobClient backgroundJobClient;
-
-        public OperationsController(IOperationServices services, IUserServices userServices, IGroupContactServices groupContactServices, IGoogleServices googleServices, IBackgroundJobClient backgroundJobClient)
+        public OperationsController(IOperationServices services, IBackgroundJobClient backgroundJobClient)
         {
             this.services = services;
-            this.userServices = userServices;
-            this.groupContactServices = groupContactServices;
-            this.googleServices = googleServices;
             this.backgroundJobClient = backgroundJobClient;
         }
         [HttpGet, Authorize]
@@ -50,34 +37,37 @@ namespace EmailMarketing.Controllers
             return Ok(services.ContentOfOperation(userId, operationId));
         }
 
-        [HttpGet("{operationId}"),Authorize]
-        public IActionResult GetDetail([FromRoute] int operaitonId, [FromQuery] GetOperationRequest request)
-        {
-            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            int userId = int.Parse(claim!.Value);
-
-            return Ok(services.GetDetailOperation(userId, operaitonId, request));
-        }
-
         [HttpPost, Authorize]
         public async Task<IActionResult> CreateAsync([FromBody] CreateOperationRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             int userId = int.Parse(claim!.Value);
-            
-            GoogleAccount googleAccount = userServices.GetDetailGoogleAccount(userId, request.GoogleAccountId!.Value);
-            GroupContact groupContact = groupContactServices.GetDetail(userId, request.GroupContactId!.Value);
-            List<string> to = groupContact.Contacts.Select(x => x.Email).ToList();
-            DateTimeOffset date = request.DateSend!.Value;
 
-            await googleServices.SendMailAsync(googleAccount.Email, to, request.Subject!, request.Content!, googleAccount.RefreshToken);
-
-            //var a = backgroundJobClient.Schedule(() => googleServices.SendMailAsync(googleAccount.Email, to, request.Subject!, request.Content!, googleAccount.RefreshToken),date);
             
-            services.Create(userId, request);
+            DateTimeOffset date = request.DateSend!>DateTime.Now?request.DateSend.Value:DateTime.Now;
+
+            Operation operation = services.Create(userId, request);
+
+            services.CreateOperationDetail(operation.Id);
+
+            backgroundJobClient.Schedule(() => services.SendMailAsync(operation.Id), date);;
 
             return Ok();
         }
+
+        [HttpGet("ReloadSendMail/{operationid}")]
+        public async Task<IActionResult> ReloadSendMailAsync([FromRoute] int operationId)
+        {
+            await services.SendMailAsync(operationId);
+            return Ok();
+        }
+
+        [HttpGet("OperationDetail/{operationId}")]
+        public IActionResult GetOperationDetail([FromRoute] int operationId, [FromQuery] GetOperationDetailRequest request)
+        {
+            return Ok(services.GetOperationDetail(operationId, request));
+        }
+
         [HttpPut("{operationId}"), Authorize]
         public IActionResult UpdateStatus([FromRoute] int operationId, [FromBody] OperationStatus status)
         {

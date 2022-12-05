@@ -14,7 +14,8 @@ namespace EmailMarketing.Common.GoogleServices
         string AuthUri(string state);
         Task<TokenResult> TokenAsync(string code);
         Task<UserInfoResult> UserInfoAsync(string refreshToken);
-        Task<bool> SendMailAsync(string from, List<string> to, string subject, string content,string refreshToken);
+        Task<TokenResult?> RefreshTokenAsync(string refreshToken);
+        Task<bool?> SendMailAsync(string from, string subject, string content,string refreshToken, params string[] to);
     }
     public class GoogleService : IGoogleServices
     {
@@ -34,13 +35,16 @@ namespace EmailMarketing.Common.GoogleServices
                 $"&redirect_uri={google.RedirectUri}&client_id={google.ClientId}&state={state}";
         }
 
-        public async Task<bool> SendMailAsync(string from, List<string> to, string subject, string content, string refreshToken)
+        public async Task<bool?> SendMailAsync(string from, string subject, string content, string refreshToken, params string[] to)
         {
             using HttpClient client = new();
 
-            TokenResult tokenResult = await RefreshTokenAsync(refreshToken);
+            TokenResult? tokenResult = await RefreshTokenAsync(refreshToken);
 
-            Message message = new Message(from,to, subject, content);
+            if (refreshToken is null)
+                return null;
+
+            Message message = new Message(from,to.ToList(), subject, content);
             MimeMessage mimeMessage = message.CreateMimeMessage();
 
             object dataRequestSendMessage = new
@@ -48,7 +52,7 @@ namespace EmailMarketing.Common.GoogleServices
                 raw = mimeMessage.ToString().Base64Encode()
             };
 
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResult.AccessToken}");
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResult!.AccessToken}");
 
             HttpResponseMessage response = await client.PostAsync($"{appSettings.Google!.Gmail!.GmailUri}/me/messages/send", new StringContent(JsonSerializer.Serialize(dataRequestSendMessage)));
 
@@ -74,16 +78,16 @@ namespace EmailMarketing.Common.GoogleServices
             Google google = appSettings.Google!;
             using HttpClient client = new();
 
-            TokenResult token = await RefreshTokenAsync(refreshToken);
+            TokenResult? token = await RefreshTokenAsync(refreshToken);
 
             HttpResponseMessage userInfoMessage = await client.PostAsync($"{google.IdentityPlatform!.UserInfoUri}" +
-                $"?access_token={token.AccessToken}", new StringContent(""));
+                $"?access_token={token!.AccessToken}", new StringContent(""));
 
             string unserInfoContent = await userInfoMessage.Content.ReadAsStringAsync();
 
             return JsonSerializer.Deserialize<UserInfoResult>(unserInfoContent)!;
         }
-        private async Task<TokenResult> RefreshTokenAsync(string refreshToken)
+        public async Task<TokenResult?> RefreshTokenAsync(string refreshToken)
         {
             Google google = appSettings.Google!;
             using HttpClient client = new();
@@ -92,7 +96,7 @@ namespace EmailMarketing.Common.GoogleServices
                 $"&client_id={google.ClientId}&client_secret={google.ClientSecret}&refresh_token={refreshToken}", new StringContent(""));
 
             if (refreshResponse.IsSuccessStatusCode is false)
-                throw new BadRequestException("Refreshtoken has expired");
+                return null;
 
             string refreshcontent = await refreshResponse.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<TokenResult>(refreshcontent)!;

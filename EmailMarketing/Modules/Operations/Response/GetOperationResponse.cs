@@ -24,8 +24,4 @@ namespace EmailMarketing.Modules.Operations.Response
         public string? Content { get; set; }
         public DateTime? DateSend { get; set; }
     }
-    public class GetOperationDetailResponse
-    {
-        public PaggingResponse<Contact>? Contacts { get; set; }
-    }
 }

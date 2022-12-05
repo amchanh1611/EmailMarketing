@@ -14,6 +14,7 @@ namespace EmailMarketing.Modules.Projects.Services
     {
         void Create(CreateProjectRequest request);
         void Update(int projectId,UpdateProjectRequest request);
+        void UpdateUsed(int projectId);
         void Delete(int projectId, DeleteProjectRequest request);
         PaggingResponse<Project> Get(GetProjectRequest request);
         PaggingResponse<Project> GetByUser(int userId, GetProjectRequest request);
@@ -67,6 +68,13 @@ namespace EmailMarketing.Modules.Projects.Services
             if(project is null)
                 throw new BadRequestException("User does not exists in system");
             repository.Project.Update(mapper.Map(request, project!));
+            repository.Save();
+        }
+
+        public void UpdateUsed(int projectId)
+        {
+            Project? project = repository.Project.FindByCondition(x => x.Id == projectId).FirstOrDefault();
+            project!.Used += 1;
             repository.Save();
         }
     }

@@ -58,6 +58,7 @@ namespace EmailMarketing.Mapping
 
             //Operation
             CreateMap<CreateOperationRequest, Operation>();
+            CreateMap<CreateOperationDetailRequest, OperationDetail>();
 
         }
     }

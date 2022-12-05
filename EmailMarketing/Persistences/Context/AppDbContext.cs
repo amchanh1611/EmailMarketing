@@ -25,6 +25,7 @@ namespace EmailMarketing.Persistences.Context
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<GoogleAccount> GoogleAccounts { get; set; }
         public DbSet<Operation> Operations { get; set; }
+        public DbSet<OperationDetail> OperationDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entityBuilder =>
@@ -38,6 +39,7 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.Property(x => x.Avatar).HasColumnType("text");
                 entityBuilder.Property(x => x.Male).HasColumnType("tinyint");
                 entityBuilder.Property(x => x.Phone).HasColumnType("char(11)");
+                entityBuilder.Property(x => x.RefreshToken).HasColumnType("text");
                 entityBuilder.HasOne(x => x.Role)
                 .WithMany(x => x.Users)
                 .HasForeignKey(x => x.RoleId)
@@ -138,6 +140,7 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.Property(x => x.Name).HasColumnType("text");
                 entityBuilder.Property(x => x.Subject).HasColumnType("text");
                 entityBuilder.Property(x => x.Content).HasColumnType("longtext");
+                entityBuilder.Property(x => x.Status).HasColumnType("tinyint");
                 entityBuilder.HasOne(x => x.Project)
                 .WithMany(x => x.Operations)
                 .HasForeignKey(x => x.ProjectId)
@@ -154,6 +157,19 @@ namespace EmailMarketing.Persistences.Context
                 .WithMany(x => x.Operations)
                 .HasForeignKey(x => x.GroupContactId)
                 .OnDelete(DeleteBehavior.NoAction);
+            });
+            modelBuilder.Entity<OperationDetail>(entityBuilder =>
+            {
+                entityBuilder.ToTable(nameof(OperationDetail).Underscore());
+                entityBuilder.HasKey(x => x.Id);
+                entityBuilder.Property(x => x.Status).HasColumnType("tinyint");
+                entityBuilder.Property(x => x.StatusMessage).HasColumnType("char(20)");
+                entityBuilder.HasOne(x => x.Operation)
+                .WithMany(x => x.OperationDetails)
+                .HasForeignKey(x => x.OperationId);
+                entityBuilder.HasOne(x => x.Contact)
+                .WithMany(x => x.OperationDetails)
+                .HasForeignKey(x => x.ContactId);
             });
         }
     }

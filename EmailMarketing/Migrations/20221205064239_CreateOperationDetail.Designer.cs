@@ -3,6 +3,7 @@ using System;
 using EmailMarketing.Persistences.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmailMarketing.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221205064239_CreateOperationDetail")]
+    partial class CreateOperationDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,11 +144,16 @@ namespace EmailMarketing.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ContactId");
 
                     b.HasIndex("OperationId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("operation_detail", (string)null);
                 });
@@ -423,6 +430,10 @@ namespace EmailMarketing.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("EmailMarketing.Modules.Users.Entities.User", null)
+                        .WithMany("OperationDetails")
+                        .HasForeignKey("UserId");
+
                     b.Navigation("Contact");
 
                     b.Navigation("Operation");
@@ -539,6 +550,8 @@ namespace EmailMarketing.Migrations
                     b.Navigation("GoogleAccounts");
 
                     b.Navigation("GroupContacts");
+
+                    b.Navigation("OperationDetails");
 
                     b.Navigation("Operations");
 

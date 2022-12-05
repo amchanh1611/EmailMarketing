@@ -25,6 +25,7 @@ namespace EmailMarketing.Persistences.Repositories
     public interface IContactRepository : IRepositoryBase<Contact> { }
     public interface IGoogleAccountRepository : IRepositoryBase<GoogleAccount> { }
     public interface IOperationRepository : IRepositoryBase<Operation> { }
+    public interface IOperationDetailRepository : IRepositoryBase<OperationDetail> { }
 
     public interface IRepositoryWrapper
     {
@@ -38,6 +39,7 @@ namespace EmailMarketing.Persistences.Repositories
         IContactRepository Contact { get; }
         IGoogleAccountRepository GoogleAccount { get; }
         IOperationRepository Operation { get; }
+        IOperationDetailRepository OperationDetail { get; }
         void Save();
 
         IDbContextTransaction Transaction();
@@ -46,6 +48,10 @@ namespace EmailMarketing.Persistences.Repositories
     public class OperationRepository : RepositoryBase<Operation>, IOperationRepository
     {
         public OperationRepository(AppDbContext context) : base(context) { }
+    } 
+    public class OperationDetailRepository : RepositoryBase<OperationDetail>, IOperationDetailRepository
+    {
+        public OperationDetailRepository(AppDbContext context) : base(context) { }
     }
 
     public class UserRepository : RepositoryBase<User>, IUserRepository
@@ -102,6 +108,7 @@ namespace EmailMarketing.Persistences.Repositories
         private IContactRepository contact;
         private IGoogleAccountRepository googleAccount;
         private IOperationRepository operation;
+        private IOperationDetailRepository operationDetail;
         private readonly AppDbContext context;
 
         public RepositoryWrapper(AppDbContext context)
@@ -225,6 +232,17 @@ namespace EmailMarketing.Persistences.Repositories
                     operation = new OperationRepository(context);
                 }
                 return operation;
+            }
+        }
+        public IOperationDetailRepository OperationDetail
+        {
+            get
+            {
+                if(operationDetail is null)
+                {
+                    operationDetail = new OperationDetailRepository(context);
+                }
+                return operationDetail;
             }
         }
 

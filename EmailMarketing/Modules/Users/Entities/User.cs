@@ -19,7 +19,7 @@ namespace EmailMarketing.Modules.Users.Entities
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public UserStatus Status { get; set; } = UserStatus.Active;
         public string? Avatar { get; set; }
-        public string RefreshToken { get; set; } = default!;
+        public string? RefreshToken { get; set; } 
         public Role? Role { get; set; }
         public ICollection<Project> Projects { get; set; } = default!;
         public ICollection<GroupContact> GroupContacts { get; set; } = default!;

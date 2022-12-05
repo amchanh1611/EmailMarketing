@@ -20,6 +20,17 @@ namespace EmailMarketing.Modules.Operations.Entities
         public Project Project { get; set; } = default!;
         public GoogleAccount GoogleAccount { get; set; } = default!;
         public GroupContact GroupContact { get; set; } = default!;
+        public ICollection<OperationDetail> OperationDetails { get; set; } = default!;
+    }
+    public class OperationDetail
+    {
+        public int Id { get; set; }
+        public int OperationId { get; set; }
+        public int ContactId { get; set; }
+        public OperationStatus Status { get; set; } = OperationStatus.Processing;
+        public string StatusMessage { get; set; } = "Processing";
+        public Operation Operation { get; set; } = default!;
+        public Contact Contact { get; set; } = default!;
     }
     public enum OperationStatus
     {

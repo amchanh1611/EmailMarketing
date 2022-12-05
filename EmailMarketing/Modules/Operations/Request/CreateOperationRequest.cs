@@ -1,5 +1,9 @@
-﻿using EmailMarketing.Persistences.Repositories;
+﻿using EmailMarketing.Modules.Contacts.Entities;
+using EmailMarketing.Modules.Operations.Entities;
+using EmailMarketing.Modules.Projects.Enities;
+using EmailMarketing.Persistences.Repositories;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace EmailMarketing.Modules.Operations.Request
@@ -14,6 +18,13 @@ namespace EmailMarketing.Modules.Operations.Request
         public int? GroupContactId { get; set; }
         public string? Content { get; set; } = default!;
         public DateTime? DateSend { get; set; }
+    }
+    public class CreateOperationDetailRequest
+    {
+        public int OperationId { get; set; }
+        public int ContactId { get; set; }
+        public OperationStatus Status { get; set; }
+        public string StatusMessage { get; set; } = default!;
     }
     public class CreateOperationValidator : AbstractValidator<CreateOperationRequest>
     {
@@ -34,11 +45,12 @@ namespace EmailMarketing.Modules.Operations.Request
                 {
                     return repository.GroupContact.FindByCondition(x => x.Id == groupContactId && x.UserId == userId).Any(); 
                 }).WithMessage("GroupContact does not exist in system");
-            //RuleFor(x=>x.RefreshToken).NotEmpty().WithMessage("{PropertyName} is required")
-            //    .Must((_, refreshToken) =>
-            //    {
-            //        return repository.GoogleAccount.FindByCondition(x => x.RefreshToken == refreshToken && x.UserId == userId).Any();
-            //    }).WithMessage("{PropertyName} does not exist in system");
+            RuleFor(x => x).Must((_, request) =>
+            {
+                GroupContact? group = repository.GroupContact.FindByCondition(z => z.Id == request.GroupContactId).Include(x=>x.Contacts).FirstOrDefault(); 
+                Project? project = repository.Project.FindByCondition(z => z.Id == request.ProjectId).Include(x=>x.ServicePackage).FirstOrDefault();
+                return group!.Contacts.Count() < (project!.ServicePackage.Quantity - project.Used);
+            }).WithMessage("The number of service packages allowed has been exceeded");
             RuleFor(x => x.Name).NotEmpty().WithMessage("{PropertyName} is required");
             RuleFor(x => x.Subject).NotEmpty().WithMessage("{PropertyName} is required");
             RuleFor(x => x.Content).NotEmpty().WithMessage("{PropertyName} is required");

@@ -73,7 +73,7 @@ builder.Services.AddHangfire
     (x => x.UseStorage(
         new MySqlStorage("server=localhost;database=emailmarketing;uid=root;pwd='';Allow User Variables=True",
         new MySqlStorageOptions())));
-builder.Services.AddHangfireServer(options => builder.Configuration.GetSection("AppSettings:HangfireSettings:Server").Bind(options));
+builder.Services.AddHangfireServer(options => builder.Configuration.GetSection("Appsettings:HangfireSettings:Server").Bind(options));
 
 //Repository
 builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();

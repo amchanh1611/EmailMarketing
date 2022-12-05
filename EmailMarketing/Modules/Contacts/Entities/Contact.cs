@@ -12,6 +12,7 @@ namespace EmailMarketing.Modules.Contacts.Entities
         public int UserId { get; set; }
         public GroupContact? GroupContact { get; set; }
         public User? User { get; set; }
+        public ICollection<OperationDetail> OperationDetails { get; set; } = default!;
     }
     public class GroupContact
     {

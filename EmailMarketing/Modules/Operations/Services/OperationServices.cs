@@ -1,14 +1,20 @@
 ﻿using AutoMapper;
+using EmailMarketing.Common.GoogleServices;
 using EmailMarketing.Common.Pagination;
 using EmailMarketing.Common.Search;
 using EmailMarketing.Common.Sort;
+using EmailMarketing.Modules.Contacts.Entities;
 using EmailMarketing.Modules.Contacts.Services;
 using EmailMarketing.Modules.Operations.Entities;
 using EmailMarketing.Modules.Operations.Request;
 using EmailMarketing.Modules.Operations.Response;
+using EmailMarketing.Modules.Projects.Services;
+using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Services;
 using EmailMarketing.Persistences.Repositories;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace EmailMarketing.Modules.Operations.Services
 {
@@ -16,19 +22,28 @@ namespace EmailMarketing.Modules.Operations.Services
     {
         Operation Create(int userId, CreateOperationRequest request);
         void UpdateStatus(int userId, int operationId, OperationStatus status);
+        Task SendMailAsync(int operationId);
+        void CreateOperationDetail(int operationId);
+        PaggingResponse<OperationDetail> GetOperationDetail(int operationId, GetOperationDetailRequest request);
         PaggingResponse<GetOperationResponse> Get(int userId, GetOperationRequest request);
         GetContentOperationResponse ContentOfOperation(int userId, int operationId);
-        GetOperationDetailResponse GetDetailOperation(int userId, int OperationId, GetOperationRequest request);
-
     }
     public class OperationServices : IOperationServices
     {
         private readonly IRepositoryWrapper repository;
+        private readonly IUserServices userServices;
+        private readonly IGroupContactServices groupContactServices;
+        private readonly IGoogleServices googleServices;
+        private readonly IProjectServices projectServices;
         private readonly IMapper mapper;
-        public OperationServices(IRepositoryWrapper repository, IMapper mapper, IUserServices userServices, IGroupContactServices groupContactServices)
+        public OperationServices(IRepositoryWrapper repository, IMapper mapper, IGroupContactServices groupContactServices, IUserServices userServices, IGoogleServices googleServices, IProjectServices projectServices)
         {
             this.repository = repository;
             this.mapper = mapper;
+            this.groupContactServices = groupContactServices;
+            this.userServices = userServices;
+            this.googleServices = googleServices;
+            this.projectServices = projectServices;
         }
 
         public GetContentOperationResponse ContentOfOperation(int userId, int operationId)
@@ -53,6 +68,16 @@ namespace EmailMarketing.Modules.Operations.Services
             return operation;
         }
 
+        public void CreateOperationDetail(int operationId)
+        {
+            Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
+            List<Contact> contacts = groupContactServices.GetDetail(operation!.UserId, operation.GroupContactId).Contacts.ToList();
+            List<OperationDetail> entities = contacts.Select(x => new OperationDetail { ContactId = x.Id, OperationId = operationId }).ToList();
+            
+            repository.OperationDetail.CreateMulti(entities);
+            repository.Save();
+        }
+
         public PaggingResponse<GetOperationResponse> Get(int userId, GetOperationRequest request)
         {
             return repository.Operation.FindByCondition(x => x.UserId == userId)
@@ -73,17 +98,45 @@ namespace EmailMarketing.Modules.Operations.Services
                 .ApplyPagging(request.Current, request.PageSize);
         }
 
-        public GetOperationDetailResponse GetDetailOperation(int userId, int operationId, GetOperationRequest request)
+        public PaggingResponse<OperationDetail> GetOperationDetail(int operationId, GetOperationDetailRequest request)
         {
-            return repository.Operation.FindByCondition(x => x.Id == operationId && x.UserId == userId).Include(x => x.GroupContact)
-                .Select(x => new GetOperationDetailResponse 
+            return repository.OperationDetail.FindByCondition(x => x.OperationId == operationId)
+                .ApplySearch(request.InfoSearch!)
+                .ApplySort(request.Orderby)
+                .ApplyPagging(request.Current, request.PageSize);
+        }
+
+        public async Task SendMailAsync(int operationId)
+        {
+            Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId)
+                .Include(x=>x.OperationDetails).ThenInclude(x=>x.Contact).FirstOrDefault();
+            GoogleAccount googleAccount = userServices.GetDetailGoogleAccount(operation!.UserId, operation.GoogleAccountId);
+            List<OperationDetail> operationDetails = operation.OperationDetails.ToList();
+            foreach (OperationDetail operationDetail in operationDetails)
+            {
+                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, operation.Content!, googleAccount.RefreshToken, operationDetail.Contact.Email);
+
+                if (status is null)
                 {
-                    Contacts = x.GroupContact.Contacts.AsQueryable()
-                    .ApplySearch(request.InfoSearch!)
-                    .ApplySort(request.Orderby)
-                    .ApplyPagging(request.Current,request.PageSize)
-                })
-                .FirstOrDefault()!;
+                    operationDetail.StatusMessage = "Authenticate error";
+                    operationDetail.Status = OperationStatus.Fail;
+                }
+
+                if (status!.Value)
+                {
+                    operationDetail.Status = OperationStatus.Complete;
+                    operationDetail.StatusMessage = "Complete";
+                    projectServices.UpdateUsed(operation.ProjectId);
+                }
+                else
+                {
+                    operationDetail.StatusMessage = "Fail";
+                    operationDetail.Status = OperationStatus.Fail;
+                }
+
+            }
+
+            UpdateStatus(operation.UserId, operationId, operationDetails.Any(x => x.Status == OperationStatus.Fail) ? OperationStatus.Fail : OperationStatus.Complete);
         }
 
         public void UpdateStatus(int userId, int operationId, OperationStatus status)

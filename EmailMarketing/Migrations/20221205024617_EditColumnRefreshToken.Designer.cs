@@ -3,6 +3,7 @@ using System;
 using EmailMarketing.Persistences.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EmailMarketing.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221205024617_EditColumnRefreshToken")]
+    partial class EditColumnRefreshToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -121,34 +123,6 @@ namespace EmailMarketing.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("operation", (string)null);
-                });
-
-            modelBuilder.Entity("EmailMarketing.Modules.Operations.Entities.OperationDetail", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("ContactId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OperationId")
-                        .HasColumnType("int");
-
-                    b.Property<sbyte>("Status")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("StatusMessage")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContactId");
-
-                    b.HasIndex("OperationId");
-
-                    b.ToTable("operation_detail", (string)null);
                 });
 
             modelBuilder.Entity("EmailMarketing.Modules.Projects.Enities.Project", b =>
@@ -409,25 +383,6 @@ namespace EmailMarketing.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("EmailMarketing.Modules.Operations.Entities.OperationDetail", b =>
-                {
-                    b.HasOne("EmailMarketing.Modules.Contacts.Entities.Contact", "Contact")
-                        .WithMany("OperationDetails")
-                        .HasForeignKey("ContactId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EmailMarketing.Modules.Operations.Entities.Operation", "Operation")
-                        .WithMany("OperationDetails")
-                        .HasForeignKey("OperationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Contact");
-
-                    b.Navigation("Operation");
-                });
-
             modelBuilder.Entity("EmailMarketing.Modules.Projects.Enities.Project", b =>
                 {
                     b.HasOne("EmailMarketing.Modules.Users.Entities.User", "User")
@@ -488,21 +443,11 @@ namespace EmailMarketing.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("EmailMarketing.Modules.Contacts.Entities.Contact", b =>
-                {
-                    b.Navigation("OperationDetails");
-                });
-
             modelBuilder.Entity("EmailMarketing.Modules.Contacts.Entities.GroupContact", b =>
                 {
                     b.Navigation("Contacts");
 
                     b.Navigation("Operations");
-                });
-
-            modelBuilder.Entity("EmailMarketing.Modules.Operations.Entities.Operation", b =>
-                {
-                    b.Navigation("OperationDetails");
                 });
 
             modelBuilder.Entity("EmailMarketing.Modules.Projects.Enities.Project", b =>

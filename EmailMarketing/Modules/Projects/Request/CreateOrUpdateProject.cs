@@ -17,10 +17,7 @@ namespace EmailMarketing.Modules.Projects.Request
         public int? OwnerId { get; set; }
         public string? CodeContract { get; set; }
     }
-    public class UpdateProjectRequest : CreateOrUpdateProject
-    {
-        public int? Used { get; set; }
-    }
+    public class UpdateProjectRequest : CreateOrUpdateProject { }
     public class CreateOrUpdateProjectValidator : AbstractValidator<CreateOrUpdateProject>
     {
         public CreateOrUpdateProjectValidator(IRepositoryWrapper repository)
@@ -62,11 +59,6 @@ namespace EmailMarketing.Modules.Projects.Request
         public UpdateProjectValidator(IRepositoryWrapper repository,IHttpContextAccessor httpContextAccessor)
         {
             RuleFor(x => x).SetValidator(new CreateOrUpdateProjectValidator(repository));
-            RuleFor(x => x.Used).Must((_, used) =>
-            {
-                int projectId = int.Parse(httpContextAccessor.HttpContext!.GetRouteValue("projectId")!.ToString()!);
-                return repository.Project.FindByCondition(x => x.Id == projectId && x.Used <= used).Any();
-            }).WithMessage("Invalid number of close times used");
         }
     }
 }
