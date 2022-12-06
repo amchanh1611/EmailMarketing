@@ -24,7 +24,8 @@ namespace EmailMarketing.Modules.Users.Services
 
         void Update(int userId, UpdateUser request);
 
-        string Login(string email, string password);
+        LoginResponse Login(string email, string password);
+        public string? RefreshToken(int userId);
 
         void UpdateName(int userId, UpdateUserName name);
 
@@ -32,7 +33,6 @@ namespace EmailMarketing.Modules.Users.Services
 
         void CreateGoogleAccount(string refreshToken, int userId, UserInfoResult userInfo);
 
-        void EditPosition(int userId, int googleId, string position);
         void DeleteGoogleAccount(int userId, DeleteGoogleAccountRequest request);
 
         PaggingResponse<GoogleAccount> GetGoogleAccout(int userId, GetGoogleAccountRequest request);
@@ -50,9 +50,9 @@ namespace EmailMarketing.Modules.Users.Services
     {
         private readonly IMapper mapper;
         private readonly IRepositoryWrapper repository;
-        private readonly IJwtUtils jwt;
+        private readonly IJwtServices jwt;
 
-        public UserServices(IRepositoryWrapper repository, IMapper mapper, IJwtUtils jwt)
+        public UserServices(IRepositoryWrapper repository, IMapper mapper, IJwtServices jwt)
         {
             this.repository = repository;
             this.mapper = mapper;
@@ -82,18 +82,6 @@ namespace EmailMarketing.Modules.Users.Services
                 throw new BadRequestException("User doest not exist in system");
 
             repository.User.Delete(user!);
-            repository.Save();
-        }
-
-        public void EditPosition(int userId, int googleId, string position)
-        {
-            GoogleAccount? googleAccount = repository.GoogleAccount.FindByCondition(x => x.Id == googleId && x.UserId == userId).FirstOrDefault();
-
-            if (googleAccount is null)
-                throw new BadRequestException("GoogleAccount does not exist in system");
-
-            googleAccount!.Position = position;
-            repository.GoogleAccount.Update(googleAccount);
             repository.Save();
         }
 
@@ -153,7 +141,7 @@ namespace EmailMarketing.Modules.Users.Services
             return profile;
         }
 
-        public string Login(string email, string password)
+        public LoginResponse Login(string email, string password)
         {
             User user = repository.User.FindByCondition(x => x.Email == email).FirstOrDefault()!;
 
@@ -163,7 +151,26 @@ namespace EmailMarketing.Modules.Users.Services
             if (!BC.Verify(password, user.Password))
                 throw new BadRequestException("Incorrect password");
 
-            return jwt.GenerateJwtToken(user);
+            string accessToken = jwt.GenerateAccessToken(user);
+            string refreshToken = jwt.GenerateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            repository.Save();
+
+            return new LoginResponse { AccessToken = accessToken, RefreshToken = refreshToken };
+        }
+
+        public string? RefreshToken(int userId)
+        {
+            User? user = repository.User.FindByCondition(x=>x.Id == userId).FirstOrDefault();
+
+            if (user is null)
+                throw new BadRequestException("Invalid user");
+
+            if (!jwt.ValidateJwtToken(user!.RefreshToken!))
+                throw new BadRequestException("Authenticate error");
+
+            return jwt.GenerateAccessToken(user);
         }
 
         public async Task UpdateAvatarAsync(int userId, UpdateUserAvatar request)
@@ -195,9 +202,12 @@ namespace EmailMarketing.Modules.Users.Services
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
 
             if (user is null)
-                throw new BadRequestException("User doest not exist in system");
+                throw new BadRequestException("Invalid user");
 
             repository.User.Update(mapper.Map(request, user!));
+
+            user.RefreshToken = null;
+
             repository.Save();
         }
 

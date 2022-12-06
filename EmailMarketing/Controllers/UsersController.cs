@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Json;
 using static EmailMarketing.Common.GoogleServices.GoogleService;
-using static EmailMarketing.Common.JWT.JwtUtils;
+using static EmailMarketing.Common.JWT.JwtServices;
 
 namespace EmailMarketing.Controllers
 {
@@ -73,6 +73,12 @@ namespace EmailMarketing.Controllers
             return Ok();
         }
 
+        [HttpGet("User/{userId}/RefreshToken")]
+        public IActionResult RefreshToken([FromRoute] int userId)
+        {
+            return Ok(userServices.RefreshToken(userId));
+        }
+
         [HttpPost("Login")]
         public IActionResult Login([FromBody] UserLogin user)
         {
@@ -129,14 +135,7 @@ namespace EmailMarketing.Controllers
             int userId = int.Parse(claim!.Value);
             return Ok(userServices.GetGoogleAccout(userId, request));
         }
-        [HttpPut("GoogleAccount/{googleId}/Position"), Authorize]
-        public IActionResult EditPosition([FromRoute] int googleId, [FromBody] string position)
-        {
-            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            int userId = int.Parse(claim!.Value);
-            userServices.EditPosition(userId, googleId, position);
-            return Ok();
-        }
+
         [HttpDelete("GoogleAccount"), Authorize]
         public IActionResult DeleGoogleAccount([FromBody] DeleteGoogleAccountRequest request)
         {

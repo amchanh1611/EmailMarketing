@@ -12,9 +12,10 @@ namespace EmailMarketing.Modules.Projects.Services
 {
     public interface IProjectServices
     {
-        void Create(CreateProjectRequest request);
+        Project Create(CreateProjectRequest request);
         void Update(int projectId,UpdateProjectRequest request);
         void UpdateUsed(int projectId);
+        void UpdateUsedDaily(int projectId);
         void Delete(int projectId, DeleteProjectRequest request);
         PaggingResponse<Project> Get(GetProjectRequest request);
         PaggingResponse<Project> GetByUser(int userId, GetProjectRequest request);
@@ -29,10 +30,12 @@ namespace EmailMarketing.Modules.Projects.Services
             this.mapper = mapper;
         }
 
-        public void Create(CreateProjectRequest request)
+        public Project Create(CreateProjectRequest request)
         {
-            repository.Project.Create(mapper.Map<CreateProjectRequest, Project>(request));
+            Project entity = mapper.Map<CreateProjectRequest, Project>(request);
+            repository.Project.Create(entity);
             repository.Save();
+            return entity;
         }
 
         public void Delete(int projectId, DeleteProjectRequest request)
@@ -75,6 +78,13 @@ namespace EmailMarketing.Modules.Projects.Services
         {
             Project? project = repository.Project.FindByCondition(x => x.Id == projectId).FirstOrDefault();
             project!.Used += 1;
+            repository.Save();
+        }
+
+        public void UpdateUsedDaily(int projectId)
+        {
+            Project? project = repository.Project.FindByCondition(x => x.Id == projectId).FirstOrDefault();
+            project!.Used = 0;
             repository.Save();
         }
     }

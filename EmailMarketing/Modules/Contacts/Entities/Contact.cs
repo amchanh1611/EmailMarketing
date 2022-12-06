@@ -7,7 +7,7 @@ namespace EmailMarketing.Modules.Contacts.Entities
         public int Id { get; set; }
         public string Name { get; set; } = default!;
         public string Email { get; set; } = default!;
-        public ContactMale? Male { get; set; } = ContactMale.Orther;
+        public ContactMale Male { get; set; }
         public int? GroupContactId { get; set; }
         public int UserId { get; set; }
         public GroupContact? GroupContact { get; set; }
@@ -27,6 +27,5 @@ namespace EmailMarketing.Modules.Contacts.Entities
     {
         Male = 1,
         Female,
-        Orther
     }
 }

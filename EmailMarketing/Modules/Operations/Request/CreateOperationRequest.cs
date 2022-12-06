@@ -26,6 +26,27 @@ namespace EmailMarketing.Modules.Operations.Request
         public OperationStatus Status { get; set; }
         public string StatusMessage { get; set; } = default!;
     }
+    public class ReadLoadSendMailRequest
+    {
+
+    }
+    public class ReadLoadSendMailValidator : AbstractValidator<ReadLoadSendMailRequest>
+    {
+        public ReadLoadSendMailValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
+        {
+            RuleFor(x => x).Must((_, request) =>
+            {
+                int operationId = int.Parse(httpContextAccessor.HttpContext!.GetRouteValue("operationId")!.ToString()!);
+                Operation? operation = repository.Operation.FindByCondition(z => z.Id == operationId).FirstOrDefault();
+                Project ? project = repository.Project.FindByCondition(z => z.Id == operation!.ProjectId).Include(x => x.ServicePackage).FirstOrDefault();
+                List<OperationDetail> operationDetails = repository.OperationDetail
+                .FindByCondition(x => x.OperationId == operationId && (x.Status == OperationStatus.Fail || x.Status == OperationStatus.Processing))
+                .ToList();
+
+                return operationDetails.Count() <= (project!.ServicePackage.Quantity - project.Used);
+            }).WithMessage("The number of service packages allowed has been exceeded");
+        }
+    }
     public class CreateOperationValidator : AbstractValidator<CreateOperationRequest>
     {
         public CreateOperationValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
@@ -49,7 +70,7 @@ namespace EmailMarketing.Modules.Operations.Request
             {
                 GroupContact? group = repository.GroupContact.FindByCondition(z => z.Id == request.GroupContactId).Include(x=>x.Contacts).FirstOrDefault(); 
                 Project? project = repository.Project.FindByCondition(z => z.Id == request.ProjectId).Include(x=>x.ServicePackage).FirstOrDefault();
-                return group!.Contacts.Count() < (project!.ServicePackage.Quantity - project.Used);
+                return group!.Contacts.Count() <= (project!.ServicePackage.Quantity - project.Used);
             }).WithMessage("The number of service packages allowed has been exceeded");
             RuleFor(x => x.Name).NotEmpty().WithMessage("{PropertyName} is required");
             RuleFor(x => x.Subject).NotEmpty().WithMessage("{PropertyName} is required");

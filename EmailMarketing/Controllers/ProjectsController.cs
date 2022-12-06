@@ -1,5 +1,7 @@
-﻿using EmailMarketing.Modules.Projects.Request;
+﻿using EmailMarketing.Modules.Projects.Enities;
+using EmailMarketing.Modules.Projects.Request;
 using EmailMarketing.Modules.Projects.Services;
+using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -31,9 +33,15 @@ namespace EmailMarketing.Controllers
         [HttpPost]
         public IActionResult Create([FromBody] CreateProjectRequest request)
         {
-            projectServices.Create(request);
+            Project project = projectServices.Create(request);
+
+            RecurringJob.AddOrUpdate("updateuseminute", () => projectServices.UpdateUsedDaily(project.Id), Cron.Minutely());
+            //RecurringJob.AddOrUpdate("updateuse", () => projectServices.UpdateUsedDaily(project.Id), Cron.Monthly(project.CreatedDate.Day));
+            RecurringJob.TriggerJob("updateuseminute");
+
             return Ok();
         }
+
         [HttpPut("{projectId}")]
         public IActionResult Update([FromRoute] int projectId, [FromBody] UpdateProjectRequest request)
         {

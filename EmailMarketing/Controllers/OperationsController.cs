@@ -38,19 +38,19 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpPost, Authorize]
-        public async Task<IActionResult> CreateAsync([FromBody] CreateOperationRequest request)
+        public IActionResult CreateAsync([FromBody] CreateOperationRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             int userId = int.Parse(claim!.Value);
 
-            
-            DateTimeOffset date = request.DateSend!>DateTime.Now?request.DateSend.Value:DateTime.Now;
+
+            DateTimeOffset date = request.DateSend! > DateTime.Now ? request.DateSend!.Value : DateTime.Now;
 
             Operation operation = services.Create(userId, request);
 
             services.CreateOperationDetail(operation.Id);
 
-            backgroundJobClient.Schedule(() => services.SendMailAsync(operation.Id), date);;
+            backgroundJobClient.Schedule(() => services.SendMailAsync(operation.Id), date); ;
 
             return Ok();
         }
@@ -68,14 +68,14 @@ namespace EmailMarketing.Controllers
             return Ok(services.GetOperationDetail(operationId, request));
         }
 
-        [HttpPut("{operationId}"), Authorize]
-        public IActionResult UpdateStatus([FromRoute] int operationId, [FromBody] OperationStatus status)
-        {
-            Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            int userId = int.Parse(claim!.Value);
+        //[HttpPut("{operationId}"), Authorize]
+        //public IActionResult UpdateStatus([FromRoute] int operationId, [FromBody] OperationStatus status)
+        //{
+        //    Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+        //    int userId = int.Parse(claim!.Value);
 
-            services.UpdateStatus(userId, operationId, status);
-            return Ok();
-        }
+        //    services.UpdateStatus(operationId, status);
+        //    return Ok();
+        //}
     }
 }

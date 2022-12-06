@@ -81,7 +81,7 @@ builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 //Services
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IRoleServices, RoleServices>();
-builder.Services.AddScoped<IJwtUtils, JwtUtils>();
+builder.Services.AddScoped<IJwtServices, JwtServices>();
 builder.Services.AddScoped<IServicePackageServices, ServicePackageServices>();
 builder.Services.AddScoped<IProjectServices, ProjectServices>();
 builder.Services.AddScoped<IGroupContactServices, GroupContactServices>();
@@ -116,7 +116,7 @@ builder.Services.AddAuthentication(option =>
         {
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["AppSettings:Jwt:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["AppSettings:Jwt:Key"])),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["AppSettings:Jwt:AccessKey"])),
             ValidateIssuer = true,
             ValidateAudience = false,
             ClockSkew = TimeSpan.Zero,

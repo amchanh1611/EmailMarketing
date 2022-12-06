@@ -13,7 +13,8 @@
     public class Jwt
     {
         public string? Issuer { get; set; }
-        public string? Key { get; set; }
+        public string? AccessKey { get; set; }
+        public string? RefreshKey { get; set; }
     }
     public class Google
     {

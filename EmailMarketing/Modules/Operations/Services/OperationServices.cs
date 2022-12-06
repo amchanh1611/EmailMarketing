@@ -15,13 +15,14 @@ using EmailMarketing.Persistences.Repositories;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1.Ocsp;
+using System.Text;
 
 namespace EmailMarketing.Modules.Operations.Services
 {
     public interface IOperationServices
     {
         Operation Create(int userId, CreateOperationRequest request);
-        void UpdateStatus(int userId, int operationId, OperationStatus status);
+        void UpdateStatus(int operationId, OperationStatus status);
         Task SendMailAsync(int operationId);
         void CreateOperationDetail(int operationId);
         PaggingResponse<OperationDetail> GetOperationDetail(int operationId, GetOperationDetailRequest request);
@@ -114,12 +115,23 @@ namespace EmailMarketing.Modules.Operations.Services
             List<OperationDetail> operationDetails = operation.OperationDetails.ToList();
             foreach (OperationDetail operationDetail in operationDetails)
             {
-                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, operation.Content!, googleAccount.RefreshToken, operationDetail.Contact.Email);
+                if (operationDetail.Status == OperationStatus.Complete)
+                    continue;
+
+                string male = operationDetail.Contact.Male == ContactMale.Male ? "Anh" : "Chị";
+
+                string dynamicContent = operation.Content.Replace("[gender]", male, StringComparison.OrdinalIgnoreCase)
+                    .Replace("[name]", operationDetail.Contact.Name, StringComparison.OrdinalIgnoreCase);
+
+                Console.OutputEncoding = Encoding.UTF8;
+
+                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, dynamicContent, googleAccount.RefreshToken, operationDetail.Contact.Email);
 
                 if (status is null)
                 {
                     operationDetail.StatusMessage = "Authenticate error";
                     operationDetail.Status = OperationStatus.Fail;
+                    break;
                 }
 
                 if (status!.Value)
@@ -136,12 +148,12 @@ namespace EmailMarketing.Modules.Operations.Services
 
             }
 
-            UpdateStatus(operation.UserId, operationId, operationDetails.Any(x => x.Status == OperationStatus.Fail) ? OperationStatus.Fail : OperationStatus.Complete);
+            UpdateStatus(operationId, operationDetails.Any(x => x.Status == OperationStatus.Fail) ? OperationStatus.Fail : OperationStatus.Complete);
         }
 
-        public void UpdateStatus(int userId, int operationId, OperationStatus status)
+        public void UpdateStatus(int operationId, OperationStatus status)
         {
-            Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId && x.UserId == userId).FirstOrDefault();
+            Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
             operation!.Status = status;
             repository.Save();
         }

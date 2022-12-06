@@ -24,11 +24,12 @@ namespace EmailMarketing.Modules.Contacts.Request
         public CreateOrUpdateContactValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("{PropertyName} is required");
-
             RuleFor(x => x.GroupContactId).Must((_, groupContactId) =>
               {
                   return repository.GroupContact.FindByCondition(x => x.Id == groupContactId).Any();
               }).When(x => x.GroupContactId != null).WithMessage("{PropertyName} doest not exist in system");
+            RuleFor(x => x.Male).NotNull().WithMessage("{PropertyName} is required")
+                .IsInEnum().WithMessage("Ivalid male");
         }
     }
     public class CreateContactValidator : AbstractValidator<CreateContactRequest>
@@ -42,8 +43,7 @@ namespace EmailMarketing.Modules.Contacts.Request
                     Claim? claim = httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier);
                     int userId = int.Parse(claim!.Value);
                     return !repository.Contact.FindByCondition(x => x.Email == email!.Trim() && x.UserId == userId).Any();
-                })
-                .WithMessage("{PropertyValue} already exist");
+                }).WithMessage("{PropertyValue} already exist");
         }
     }
     public class UpdateContactValidator : AbstractValidator<UpdateContactRequest>
