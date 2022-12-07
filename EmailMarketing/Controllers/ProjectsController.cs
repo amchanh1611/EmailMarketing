@@ -35,9 +35,8 @@ namespace EmailMarketing.Controllers
         {
             Project project = projectServices.Create(request);
 
-            RecurringJob.AddOrUpdate("updateuseminute", () => projectServices.UpdateUsedDaily(project.Id), Cron.Minutely());
-            //RecurringJob.AddOrUpdate("updateuse", () => projectServices.UpdateUsedDaily(project.Id), Cron.Monthly(project.CreatedDate.Day));
-            RecurringJob.TriggerJob("updateuseminute");
+            RecurringJob.AddOrUpdate("updateuse", () => projectServices.UpdateUsedDaily(project.Id), Cron.Monthly(project.CreatedDate.Day));
+            RecurringJob.TriggerJob("updateuse");
 
             return Ok();
         }

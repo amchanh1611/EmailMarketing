@@ -152,10 +152,15 @@ namespace EmailMarketing.Modules.Users.Services
                 throw new BadRequestException("Incorrect password");
 
             string accessToken = jwt.GenerateAccessToken(user);
-            string refreshToken = jwt.GenerateRefreshToken();
 
-            user.RefreshToken = refreshToken;
-            repository.Save();
+            string refreshToken = user.RefreshToken!;
+
+            if (refreshToken is null)
+            {
+                refreshToken = jwt.GenerateRefreshToken();
+                user.RefreshToken = refreshToken;
+                repository.Save();
+            }
 
             return new LoginResponse { AccessToken = accessToken, RefreshToken = refreshToken };
         }
