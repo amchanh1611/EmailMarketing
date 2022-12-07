@@ -3,6 +3,8 @@ using EmailMarketing.Common.Extensions;
 using EmailMarketing.Middleware;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using static EmailMarketing.Common.GoogleServices.GoogleService;
@@ -49,7 +51,7 @@ namespace EmailMarketing.Common.GoogleServices
 
             object dataRequestSendMessage = new
             {
-                raw = mimeMessage.ToString().Base64Encode()
+                raw = mimeMessage.Base64UrlSafeEncode()
             };
 
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {tokenResult!.AccessToken}");
@@ -148,7 +150,7 @@ namespace EmailMarketing.Common.GoogleServices
             {
                 From = from;
                 To = new List<MailboxAddress>();
-                To.AddRange(to.Select(x => new MailboxAddress("EmailMarketing",x)));
+                To.AddRange(to.Select(x => new MailboxAddress("EmailMarketing", x)));
                 Subject = subject;
                 Content = content;
             }

@@ -123,8 +123,6 @@ namespace EmailMarketing.Modules.Operations.Services
                 string dynamicContent = operation.Content.Replace("[gender]", male, StringComparison.OrdinalIgnoreCase)
                     .Replace("[name]", operationDetail.Contact.Name, StringComparison.OrdinalIgnoreCase);
 
-                Console.OutputEncoding = Encoding.UTF8;
-
                 bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, dynamicContent, googleAccount.RefreshToken, operationDetail.Contact.Email);
 
                 if (status is null)
