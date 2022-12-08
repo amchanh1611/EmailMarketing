@@ -43,8 +43,7 @@ namespace EmailMarketing.Controllers
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             int userId = int.Parse(claim!.Value);
 
-
-            DateTimeOffset date = request.DateSend! > DateTime.Now ? request.DateSend!.Value : DateTime.Now;
+            DateTimeOffset date = request.DateSend!.Value;
 
             Operation operation = services.Create(userId, request);
 
@@ -55,7 +54,7 @@ namespace EmailMarketing.Controllers
             return Ok();
         }
 
-        [HttpGet("ReloadSendMail/{operationid}")]
+        [HttpGet("ReloadSendMail/{operationId}")]
         public async Task<IActionResult> ReloadSendMailAsync([FromRoute] int operationId)
         {
             await services.SendMailAsync(operationId);

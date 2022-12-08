@@ -1,26 +1,6 @@
-//quan li token ???????????
-//Seleact lai response get contact
-//Cập nhật số lần sử dụng của gói (cập nhật used) qua thang moi phai reset lai so lan su dung??????????
-
-them get ProjectByUser????????
-them edit position??????
-co phai khi refresh token google het han thi tu dong khong gui duoc refresh token de lay accesstoken duoc????????
-
-
-//Validate ReloadSendMail mail nao chua gui moi gui lai??????????
-//Đặt lại mật khẩu sẽ bắt đăng nhập lại bằng cách xóa refresh token
-
-truyền userId hay truyền token vào API refreshToken??? nên truyền userId vì khi mà đổi mật khẩu hay đăng xuất thì sẽ xóa refresh token của user đó
-, thì khi truyền userId sẽ kiểm tra tra được refreshtoken đó không còn hợp lệ nữa, 
-còn nếu mà truyền token thì vẫn có thể sử dụng token cũ để refresh????????????
-
-nếu mà đổi token thì token cũ còn sử dụng được không??????????được
-
-Nếu người dùng dùng refresh token của user khác thì vẫn có thể refresh được token miễn là có token và đúng key là được????????
-
-không nên bỏ Id vào refreshtoken nếu bỏ Id vào thì cũng có thể dùng refresh token để sử dụng trong hệ thống?????? và cũng không cần bỏ thêm gì vào
-
-khi đã xóa refresh token thì không còn lấy accesstoken mới được nhưng accesstoken còn hạn thì cũng còn dùng được trong khoảng thời
-gian còn hạn???????
-
-//việc xử lí token không hợp lệ nữa?????? danh sách đen cho token bị hủy và khi nó hết hạn thì tự động xóa nó????
+// sửa refreshtoken truyền vào token
+// thêm gửi file
+// whitelist token xóa
+// thêm update and xóa chiến dịch (hủy job) status 4 trạng thái
+// getdetail operation detail
+// phân quyền
