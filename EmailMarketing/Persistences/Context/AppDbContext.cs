@@ -141,6 +141,8 @@ namespace EmailMarketing.Persistences.Context
                 entityBuilder.Property(x => x.Subject).HasColumnType("text");
                 entityBuilder.Property(x => x.Content).HasColumnType("longtext");
                 entityBuilder.Property(x => x.Status).HasColumnType("tinyint");
+                entityBuilder.Property(x => x.FileContent).HasColumnType("text");
+                entityBuilder.Property(x => x.FileName).HasColumnType("text");
                 entityBuilder.HasOne(x => x.Project)
                 .WithMany(x => x.Operations)
                 .HasForeignKey(x => x.ProjectId)

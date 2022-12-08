@@ -24,4 +24,12 @@ namespace EmailMarketing.Modules.Operations.Response
         public string? Content { get; set; }
         public DateTime? DateSend { get; set; }
     }
+    public class GetOperationDetailResponse
+    {
+        public int? Complete { get; set; }
+        public int? WaitProcessing { get; set; }
+        public int? Processing { get; set; }
+        public int? Fail { get; set; }
+        public PaggingResponse<OperationDetail> OperationDetail { get; set; } = default!;
+    }
 }

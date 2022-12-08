@@ -73,10 +73,10 @@ namespace EmailMarketing.Controllers
             return Ok();
         }
 
-        [HttpGet("User/{userId}/RefreshToken")]
-        public IActionResult RefreshToken([FromRoute] int userId)
+        [HttpGet("User/RefreshToken")]
+        public IActionResult RefreshToken([FromQuery] string refreshToken)
         {
-            return Ok(userServices.RefreshToken(userId));
+            return Ok(userServices.RefreshToken(refreshToken));
         }
 
         [HttpPost("Login")]

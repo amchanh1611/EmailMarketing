@@ -38,20 +38,20 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpPost, Authorize]
-        public IActionResult CreateAsync([FromBody] CreateOperationRequest request)
+        public async Task<IActionResult> CreateAsync([FromForm] CreateOperationRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             int userId = int.Parse(claim!.Value);
 
             DateTimeOffset date = request.DateSend!.Value;
 
-            Operation operation = services.Create(userId, request);
+            Operation operation = await services.CreateAsync(userId, request);
 
             services.CreateOperationDetail(operation.Id);
 
-            backgroundJobClient.Schedule(() => services.SendMailAsync(operation.Id), date); ;
+            string jobId = backgroundJobClient.Schedule(() => services.SendMailAsync(operation.Id), date); 
 
-            return Ok();
+            return Ok(jobId);
         }
 
         [HttpGet("ReloadSendMail/{operationId}")]
@@ -66,15 +66,19 @@ namespace EmailMarketing.Controllers
         {
             return Ok(services.GetOperationDetail(operationId, request));
         }
+        [HttpPut("Operation/{operationId}")]
+        public IActionResult Update([FromRoute] int operationId,[FromQuery] string jobId, [FromBody] UpdateOperationRequest request)
+        {
+            backgroundJobClient.Delete(jobId);
 
-        //[HttpPut("{operationId}"), Authorize]
-        //public IActionResult UpdateStatus([FromRoute] int operationId, [FromBody] OperationStatus status)
-        //{
-        //    Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-        //    int userId = int.Parse(claim!.Value);
-
-        //    services.UpdateStatus(operationId, status);
-        //    return Ok();
-        //}
+            services.Update(operationId, request);
+            return Ok();
+        }
+        [HttpDelete]
+        public IActionResult Delete([FromBody] DeleteOperationRequest request)
+        {
+            services.Delete(request);
+            return Ok();
+        }
     }
 }
