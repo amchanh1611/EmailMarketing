@@ -8,17 +8,19 @@ using System.Security.Claims;
 
 namespace EmailMarketing.Modules.Operations.Request
 {
-    public class CreateOperationRequest
+    public class CreateOrUpdateOperation
     {
-        //public string? RefreshToken { get; set; }
         public int? ProjectId { get; set; }
         public string? Name { get; set; }
         public int? GoogleAccountId { get; set; }
-        public string? Subject { get; set; } 
+        public string? Subject { get; set; }
         public int? GroupContactId { get; set; }
         public string? Content { get; set; } = default!;
+        public IFormFile? File { get; set; }
         public DateTime? DateSend { get; set; }
     }
+    public class UpdateOperationRequest : CreateOrUpdateOperation { }
+    public class CreateOperationRequest : CreateOrUpdateOperation { }
     public class CreateOperationDetailRequest
     {
         public int OperationId { get; set; }
@@ -47,9 +49,9 @@ namespace EmailMarketing.Modules.Operations.Request
             }).WithMessage("The number of service packages allowed has been exceeded");
         }
     }
-    public class CreateOperationValidator : AbstractValidator<CreateOperationRequest>
+    public class CreateOrUpdateOperationValidator : AbstractValidator<CreateOrUpdateOperation>
     {
-        public CreateOperationValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
+        public CreateOrUpdateOperationValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
         {
             Claim? claim = httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier);
             int userId = int.Parse(claim!.Value);
@@ -75,6 +77,25 @@ namespace EmailMarketing.Modules.Operations.Request
             RuleFor(x => x.Name).NotEmpty().WithMessage("{PropertyName} is required");
             RuleFor(x => x.Subject).NotEmpty().WithMessage("{PropertyName} is required");
             RuleFor(x => x.Content).NotEmpty().WithMessage("{PropertyName} is required");
+        }
+    }
+    public class CreateOperationValidator : AbstractValidator<CreateOperationRequest>
+    {
+        public CreateOperationValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
+        {
+            RuleFor(x => x).SetValidator(new CreateOrUpdateOperationValidator(repository, httpContextAccessor));
+        }
+    }
+    public class UpdateOperationValidator : AbstractValidator<UpdateOperationRequest>
+    {
+        public UpdateOperationValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
+        {
+            RuleFor(x => x).SetValidator(new CreateOrUpdateOperationValidator(repository, httpContextAccessor));
+            RuleFor(x => x).Must((_, request) =>
+            {
+                int operationId = int.Parse(httpContextAccessor.HttpContext!.GetRouteValue("operationId")!.ToString()!);
+                return repository.Operation.FindByCondition(x => x.Id == operationId && x.Status == OperationStatus.WaitProcessing).Any();
+            }).WithMessage("Operation has started");
         }
     }
 }

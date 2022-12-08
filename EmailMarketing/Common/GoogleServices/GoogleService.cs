@@ -17,7 +17,7 @@ namespace EmailMarketing.Common.GoogleServices
         Task<TokenResult> TokenAsync(string code);
         Task<UserInfoResult> UserInfoAsync(string refreshToken);
         Task<TokenResult?> RefreshTokenAsync(string refreshToken);
-        Task<bool?> SendMailAsync(string from, string subject, string content,string refreshToken, params string[] to);
+        Task<bool?> SendMailAsync(string from, string subject, string content,string refreshToken, MemoryStream file, string fileName, params string[] to);
     }
     public class GoogleService : IGoogleServices
     {
@@ -37,7 +37,7 @@ namespace EmailMarketing.Common.GoogleServices
                 $"&redirect_uri={google.RedirectUri}&client_id={google.ClientId}&state={state}";
         }
 
-        public async Task<bool?> SendMailAsync(string from, string subject, string content, string refreshToken, params string[] to)
+        public async Task<bool?> SendMailAsync(string from, string subject, string content, string refreshToken, MemoryStream file, string fileName, params string[] to)
         {
             using HttpClient client = new();
 
@@ -47,7 +47,7 @@ namespace EmailMarketing.Common.GoogleServices
                 return null;
 
             Message message = new Message(from,to.ToList(), subject, content);
-            MimeMessage mimeMessage = message.CreateMimeMessage();
+            MimeMessage mimeMessage = message.CreateMimeMessage(file,fileName);
 
             object dataRequestSendMessage = new
             {

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using EmailMarketing.Common.Extensions;
 using EmailMarketing.Common.GoogleServices;
 using EmailMarketing.Common.Pagination;
 using EmailMarketing.Common.Search;
@@ -21,11 +22,13 @@ namespace EmailMarketing.Modules.Operations.Services
 {
     public interface IOperationServices
     {
-        Operation Create(int userId, CreateOperationRequest request);
+        Task<Operation> CreateAsync(int userId, CreateOperationRequest request);
         void UpdateStatus(int operationId, OperationStatus status);
         Task SendMailAsync(int operationId);
         void CreateOperationDetail(int operationId);
-        PaggingResponse<OperationDetail> GetOperationDetail(int operationId, GetOperationDetailRequest request);
+        void Update(int operationId, UpdateOperationRequest request);
+        void Delete(DeleteOperationRequest request);
+        GetOperationDetailResponse GetOperationDetail(int operationId, GetOperationDetailRequest request);
         PaggingResponse<GetOperationResponse> Get(int userId, GetOperationRequest request);
         GetContentOperationResponse ContentOfOperation(int userId, int operationId);
     }
@@ -60,10 +63,17 @@ namespace EmailMarketing.Modules.Operations.Services
                 }).FirstOrDefault()!;
         }
 
-        public Operation Create(int userId, CreateOperationRequest request)
+        public async Task<Operation> CreateAsync(int userId, CreateOperationRequest request)
         {
             Operation operation = mapper.Map<CreateOperationRequest, Operation>(request);
             operation.UserId = userId;
+
+            if (request.File != null)
+            {
+                operation.FileContent = await request.File.UploadFilesAsync("FileContents");
+                operation.FileName = request.File.FileName;
+            }
+
             repository.Operation.Create(operation);
             repository.Save();
             return operation;
@@ -76,6 +86,13 @@ namespace EmailMarketing.Modules.Operations.Services
             List<OperationDetail> entities = contacts.Select(x => new OperationDetail { ContactId = x.Id, OperationId = operationId }).ToList();
             
             repository.OperationDetail.CreateMulti(entities);
+            repository.Save();
+        }
+
+        public void Delete(DeleteOperationRequest request)
+        {
+            List<Operation> operations = repository.Operation.FindByCondition(x => request.OperationIds!.Contains(x.Id)).ToList();
+            repository.Operation.DeleteMulti(operations);
             repository.Save();
         }
 
@@ -99,18 +116,27 @@ namespace EmailMarketing.Modules.Operations.Services
                 .ApplyPagging(request.Current, request.PageSize);
         }
 
-        public PaggingResponse<OperationDetail> GetOperationDetail(int operationId, GetOperationDetailRequest request)
+        public GetOperationDetailResponse GetOperationDetail(int operationId, GetOperationDetailRequest request)
         {
-            return repository.OperationDetail.FindByCondition(x => x.OperationId == operationId)
-                .ApplySearch(request.InfoSearch!)
-                .ApplySort(request.Orderby)
-                .ApplyPagging(request.Current, request.PageSize);
+            IQueryable<OperationDetail> entities = repository.OperationDetail.FindByCondition(x => x.OperationId == operationId);
+
+            return new GetOperationDetailResponse
+            {
+                Complete = entities.Count(x => x.Status == OperationStatus.Complete),
+                WaitProcessing= entities.Count(x=>x.Status == OperationStatus.WaitProcessing),
+                Processing = entities.Count(x => x.Status == OperationStatus.Processing),
+                Fail = entities.Count(x => x.Status == OperationStatus.Fail),
+                OperationDetail = entities.ApplySearch(request.InfoSearch!).ApplySort(request.Orderby).ApplyPagging(request.Current, request.PageSize)
+            };
         }
 
         public async Task SendMailAsync(int operationId)
         {
             Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId)
                 .Include(x=>x.OperationDetails).ThenInclude(x=>x.Contact).FirstOrDefault();
+            operation!.Status = OperationStatus.Processing;
+            repository.Save();
+
             GoogleAccount googleAccount = userServices.GetDetailGoogleAccount(operation!.UserId, operation.GoogleAccountId);
             List<OperationDetail> operationDetails = operation.OperationDetails.ToList();
             foreach (OperationDetail operationDetail in operationDetails)
@@ -118,12 +144,18 @@ namespace EmailMarketing.Modules.Operations.Services
                 if (operationDetail.Status == OperationStatus.Complete)
                     continue;
 
+                operationDetail.Status = OperationStatus.Processing;
+                operationDetail.StatusMessage = "Processing";
+                repository.Save();
+
                 string male = operationDetail.Contact.Male == ContactMale.Male ? "Anh" : "Chị";
 
                 string dynamicContent = operation.Content.Replace("[gender]", male, StringComparison.OrdinalIgnoreCase)
                     .Replace("[name]", operationDetail.Contact.Name, StringComparison.OrdinalIgnoreCase);
 
-                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, dynamicContent, googleAccount.RefreshToken, operationDetail.Contact.Email);
+                MemoryStream? fileContent = operation.FileContent is null ? null : await operation.FileContent!.ReadFile();
+
+                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, dynamicContent, googleAccount.RefreshToken,fileContent!, operation.FileName!, operationDetail.Contact.Email);
 
                 if (status is null)
                 {
@@ -147,6 +179,13 @@ namespace EmailMarketing.Modules.Operations.Services
             }
 
             UpdateStatus(operationId, operationDetails.Any(x => x.Status == OperationStatus.Fail) ? OperationStatus.Fail : OperationStatus.Complete);
+        }
+
+        public void Update(int operationId, UpdateOperationRequest request)
+        {
+            Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
+            repository.Operation.Update(mapper.Map(request, operation!));
+            repository.Save();
         }
 
         public void UpdateStatus(int operationId, OperationStatus status)

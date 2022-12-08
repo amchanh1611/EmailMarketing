@@ -25,7 +25,7 @@ namespace EmailMarketing.Modules.Users.Services
         void Update(int userId, UpdateUser request);
 
         LoginResponse Login(string email, string password);
-        public string? RefreshToken(int userId);
+        public string? RefreshToken(string refreshToken);
 
         void UpdateName(int userId, UpdateUserName name);
 
@@ -165,12 +165,12 @@ namespace EmailMarketing.Modules.Users.Services
             return new LoginResponse { AccessToken = accessToken, RefreshToken = refreshToken };
         }
 
-        public string? RefreshToken(int userId)
+        public string? RefreshToken(string refreshToken)
         {
-            User? user = repository.User.FindByCondition(x=>x.Id == userId).FirstOrDefault();
+            User? user = repository.User.FindByCondition(x=>x.RefreshToken == refreshToken).FirstOrDefault();
 
             if (user is null)
-                throw new BadRequestException("Invalid user");
+                throw new BadRequestException("Invalid Refreshtoken");
 
             if (!jwt.ValidateJwtToken(user!.RefreshToken!))
                 throw new BadRequestException("Authenticate error");

@@ -12,10 +12,12 @@ namespace EmailMarketing.Modules.Operations.Entities
         public string Subject { get; set; } = default!;
         public int GroupContactId { get; set; }
         public string Content { get; set; } = default!;
+        public string? FileContent { get; set; }
+        public string? FileName { get; set; }
         public DateTime DateSend { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public int UserId { get; set; }
-        public OperationStatus Status { get; set; } = OperationStatus.Processing;
+        public OperationStatus Status { get; set; } = OperationStatus.WaitProcessing;
         public User User { get; set; } = default!;
         public Project Project { get; set; } = default!;
         public GoogleAccount GoogleAccount { get; set; } = default!;
@@ -27,8 +29,8 @@ namespace EmailMarketing.Modules.Operations.Entities
         public int Id { get; set; }
         public int OperationId { get; set; }
         public int ContactId { get; set; }
-        public OperationStatus Status { get; set; } = OperationStatus.Processing;
-        public string StatusMessage { get; set; } = "Processing";
+        public OperationStatus Status { get; set; } = OperationStatus.WaitProcessing;
+        public string StatusMessage { get; set; } = "WaitProcessing";
         public Operation Operation { get; set; } = default!;
         public Contact Contact { get; set; } = default!;
     }
@@ -36,6 +38,7 @@ namespace EmailMarketing.Modules.Operations.Entities
     {
         Complete = 1,
         Fail,
-        Processing
+        Processing,
+        WaitProcessing
     }
 }

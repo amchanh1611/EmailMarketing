@@ -1,6 +1,9 @@
-// sửa refreshtoken truyền vào token
-// thêm gửi file
-// whitelist token xóa
-// thêm update and xóa chiến dịch (hủy job) status 4 trạng thái
-// getdetail operation detail
+// sửa refreshtoken truyền vào token VVVV
+// thêm gửi file VVV trong body da co file ma gui qua khong co
+// whitelist token xóa  VVVV
+// thêm update and xóa chiến dịch (hủy job) status 4 trạng thái VVVV
+// getdetail operation detail VVVV
 // phân quyền
+
+
+// anh review code cua em luon con phan quyen review sau 

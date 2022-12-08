@@ -8,15 +8,18 @@ namespace EmailMarketing.Common.Extensions
 {
     public static class Helper
     {
-        public static MimeMessage CreateMimeMessage(this Message message)
+        public static MimeMessage CreateMimeMessage(this Message message,MemoryStream file,string fileName)
         {
             MimeMessage emailMessage = new();
             emailMessage.From.Add(new MailboxAddress("EmailMarketing ", message.From));
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
             BodyBuilder bodyBuilder = new BodyBuilder { HtmlBody = string.Format(message.Content) };
+
+            if(file != null)
+                bodyBuilder.Attachments.Add(fileName, file);
+
             emailMessage.Body = bodyBuilder.ToMessageBody();
-            //emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text) { Text = message.Content };
             return emailMessage;
         }
         public static async Task<string> UploadFilesAsync(this IFormFile file, string path)
@@ -32,6 +35,19 @@ namespace EmailMarketing.Common.Extensions
             }
 
             return relativePath;
+        }
+        public static async Task<MemoryStream> ReadFile(this string relativePath)
+        {
+            MemoryStream memoryStream = new();
+
+            string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath);
+
+            using (Stream stream = new FileStream(absolutePath, FileMode.Open))
+            {
+                await stream.CopyToAsync(memoryStream);
+            }
+
+            return memoryStream;
         }
         public static string ReadAsLink(this string path, HttpContext context)
         {
