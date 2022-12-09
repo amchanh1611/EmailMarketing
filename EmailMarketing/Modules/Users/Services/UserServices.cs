@@ -22,7 +22,7 @@ namespace EmailMarketing.Modules.Users.Services
 
         void Delete(int userId);
 
-        void Update(int userId, UpdateUser request);
+        void Update(int userId, UpdateUserRequest request);
 
         LoginResponse Login(string email, string password);
         public string? RefreshToken(string refreshToken);
@@ -143,7 +143,10 @@ namespace EmailMarketing.Modules.Users.Services
 
         public LoginResponse Login(string email, string password)
         {
-            User user = repository.User.FindByCondition(x => x.Email == email).FirstOrDefault()!;
+            User user = repository.User.FindByCondition(x => x.Email == email)
+                .Include(x=>x.Role)
+                .ThenInclude(x=>x.RolePermissions)
+                .FirstOrDefault()!;
 
             if (user is null)
                 throw new BadRequestException("Incorrect email");
@@ -216,7 +219,7 @@ namespace EmailMarketing.Modules.Users.Services
             repository.Save();
         }
 
-        public void Update(int userId, UpdateUser request)
+        public void Update(int userId, UpdateUserRequest request)
         {
             User? user = repository.User.FindByCondition(x => x.Id == userId).FirstOrDefault();
 

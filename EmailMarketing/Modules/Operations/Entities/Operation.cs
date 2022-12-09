@@ -29,8 +29,8 @@ namespace EmailMarketing.Modules.Operations.Entities
         public int Id { get; set; }
         public int OperationId { get; set; }
         public int ContactId { get; set; }
-        public OperationStatus Status { get; set; } = OperationStatus.WaitProcessing;
-        public string StatusMessage { get; set; } = "WaitProcessing";
+        public OperationStatus Status { get; set; } = OperationStatus.Processing;
+        public string StatusMessage { get; set; } = "Processing";
         public Operation Operation { get; set; } = default!;
         public Contact Contact { get; set; } = default!;
     }

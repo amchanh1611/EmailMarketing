@@ -2,7 +2,6 @@
 using EmailMarketing.Modules.Projects.Request;
 using EmailMarketing.Modules.Projects.Services;
 using Hangfire;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -50,7 +49,7 @@ namespace EmailMarketing.Controllers
         [HttpDelete("{projectId}")]
         public IActionResult Delete([FromRoute] int projectId, [FromBody] DeleteProjectRequest request)
         {
-            projectServices.Delete(projectId,request);
+            projectServices.Delete(projectId, request);
             return Ok();
         }
     }

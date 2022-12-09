@@ -3,7 +3,6 @@ using EmailMarketing.Modules.Users.Responses;
 using EmailMarketing.Modules.Users.Services;
 using System.Net;
 using System.Security.Claims;
-using System.Text.Json;
 
 namespace EmailMarketing.Middleware
 {

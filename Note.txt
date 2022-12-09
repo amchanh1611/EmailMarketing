@@ -7,3 +7,25 @@
 
 
 // anh review code cua em luon con phan quyen review sau 
+
+// redis
+la gi??
+dung khi nao?? 
+
+{
+  "name": "Khách hàng",
+  "userType": 3,
+  "permissionCodes": [
+    "CreateContact","CreateOperation","DeleteContact","DeleteOperation","	
+UpdateContact","UpdateOperation","ViewContact","ViewOperation","	
+ViewProject"
+  ]
+}
+
+{
+  "name": "Nhân Viên",
+  "userType": 2,
+  "permissionCodes": [ "CreateAccount","CreateCustommer","CreateProject","CreateRole","CreateServicePackage","DeleteAccount","DeleteCustommer","DeleteProject","DeleteRole","DeleteServicePackage","UpdateAccount",
+"UpdateCustommer","UpdateProject","UpdateRole","UpdateServicePackage","ViewAccount","ViewCustommer","ViewProject","ViewRole","ViewServicePackage"
+  ]
+}

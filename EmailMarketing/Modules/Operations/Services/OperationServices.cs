@@ -13,10 +13,7 @@ using EmailMarketing.Modules.Projects.Services;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Services;
 using EmailMarketing.Persistences.Repositories;
-using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Text;
 
 namespace EmailMarketing.Modules.Operations.Services
 {
@@ -84,7 +81,7 @@ namespace EmailMarketing.Modules.Operations.Services
             Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
             List<Contact> contacts = groupContactServices.GetDetail(operation!.UserId, operation.GroupContactId).Contacts.ToList();
             List<OperationDetail> entities = contacts.Select(x => new OperationDetail { ContactId = x.Id, OperationId = operationId }).ToList();
-            
+
             repository.OperationDetail.CreateMulti(entities);
             repository.Save();
         }
@@ -123,7 +120,6 @@ namespace EmailMarketing.Modules.Operations.Services
             return new GetOperationDetailResponse
             {
                 Complete = entities.Count(x => x.Status == OperationStatus.Complete),
-                WaitProcessing= entities.Count(x=>x.Status == OperationStatus.WaitProcessing),
                 Processing = entities.Count(x => x.Status == OperationStatus.Processing),
                 Fail = entities.Count(x => x.Status == OperationStatus.Fail),
                 OperationDetail = entities.ApplySearch(request.InfoSearch!).ApplySort(request.Orderby).ApplyPagging(request.Current, request.PageSize)
@@ -133,29 +129,26 @@ namespace EmailMarketing.Modules.Operations.Services
         public async Task SendMailAsync(int operationId)
         {
             Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId)
-                .Include(x=>x.OperationDetails).ThenInclude(x=>x.Contact).FirstOrDefault();
+                .Include(x => x.OperationDetails).ThenInclude(x => x.Contact).FirstOrDefault();
             operation!.Status = OperationStatus.Processing;
             repository.Save();
 
             GoogleAccount googleAccount = userServices.GetDetailGoogleAccount(operation!.UserId, operation.GoogleAccountId);
             List<OperationDetail> operationDetails = operation.OperationDetails.ToList();
+
             foreach (OperationDetail operationDetail in operationDetails)
             {
                 if (operationDetail.Status == OperationStatus.Complete)
                     continue;
-
-                operationDetail.Status = OperationStatus.Processing;
-                operationDetail.StatusMessage = "Processing";
-                repository.Save();
 
                 string male = operationDetail.Contact.Male == ContactMale.Male ? "Anh" : "Chị";
 
                 string dynamicContent = operation.Content.Replace("[gender]", male, StringComparison.OrdinalIgnoreCase)
                     .Replace("[name]", operationDetail.Contact.Name, StringComparison.OrdinalIgnoreCase);
 
-                MemoryStream? fileContent = operation.FileContent is null ? null : await operation.FileContent!.ReadFile();
+                string? path = operation.FileContent is null ? null : Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", operation.FileContent);
 
-                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, dynamicContent, googleAccount.RefreshToken,fileContent!, operation.FileName!, operationDetail.Contact.Email);
+                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, dynamicContent, googleAccount.RefreshToken, path!, operation.FileName!, operationDetail.Contact.Email);
 
                 if (status is null)
                 {

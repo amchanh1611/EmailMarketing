@@ -1,14 +1,10 @@
-﻿using EmailMarketing.AppSetting;
-using EmailMarketing.Common.Extensions;
+﻿using EmailMarketing.Common.Extensions;
 using EmailMarketing.Common.GoogleServices;
-using EmailMarketing.Common.JWT;
-using EmailMarketing.Common.Pagination;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Requests;
 using EmailMarketing.Modules.Users.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Json;
 using static EmailMarketing.Common.GoogleServices.GoogleService;
@@ -21,15 +17,14 @@ namespace EmailMarketing.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserServices userServices;
-        private readonly AppSettings appSettings;
         private readonly IGoogleServices googleServices;
-        public UsersController(IUserServices userServices, IOptions<AppSettings> appSettings, IGoogleServices googleServices)
+        public UsersController(IUserServices userServices, IGoogleServices googleServices)
         {
             this.userServices = userServices;
-            this.appSettings = appSettings.Value;
             this.googleServices = googleServices;
         }
         [HttpPost]
+        [Authorize(Roles ="UpdateAccount")]
         public IActionResult Create([FromBody] CreateUserRequest request)
         {
             userServices.Create(request);
@@ -37,12 +32,10 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "ViewAccount")]
         public IActionResult GetUser([FromQuery] GetUserRequest request)
         {
-            PaggingResponse<User> result = userServices.Get(request);
-            if (result != null)
-                return Ok(result);
-            return BadRequest("No user exists in the system");
+            return Ok(userServices.Get(request));
         }
 
         [HttpGet("Profile"), Authorize]
@@ -53,6 +46,7 @@ namespace EmailMarketing.Controllers
             return Ok(userServices.GetProfile(int.Parse(claim!.Value), context));
         }
         [HttpGet("{userId}")]
+        [Authorize(Roles = "ViewAccount")]
         public IActionResult GetDetail([FromRoute] int userId)
         {
             HttpContext context = HttpContext;
@@ -60,6 +54,7 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpDelete("{userId}")]
+        [Authorize(Roles = "DeleteAccount")]
         public IActionResult Delete([FromRoute] int userId)
         {
             userServices.Delete(userId);
@@ -67,7 +62,8 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpPut("{userId}")]
-        public IActionResult UpdateUser([FromRoute] int userId, [FromBody] UpdateUser request)
+        [Authorize(Roles = "UpdateAccount")]
+        public IActionResult UpdateUser([FromRoute] int userId, [FromBody] UpdateUserRequest request)
         {
             userServices.Update(userId, request);
             return Ok();
@@ -108,7 +104,8 @@ namespace EmailMarketing.Controllers
             userServices.UpdatePassword(int.Parse(claim!.Value), request);
             return Ok("Ok");
         }
-        [HttpGet("AuthAccount"), Authorize]
+        [HttpGet("AuthAccount")]
+        [Authorize(Roles = "ViewContact")]
         public IActionResult AuthAccount()
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -128,7 +125,8 @@ namespace EmailMarketing.Controllers
             userServices.CreateGoogleAccount(tokenResult.RefreshToken!, stateObject.UserId, userInfo);
             return Ok();
         }
-        [HttpGet("GoogleAccount"), Authorize]
+        [HttpGet("GoogleAccount")]
+        [Authorize(Roles = "ViewContact")]
         public IActionResult GetGoogleAccount([FromQuery] GetGoogleAccountRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -136,7 +134,8 @@ namespace EmailMarketing.Controllers
             return Ok(userServices.GetGoogleAccout(userId, request));
         }
 
-        [HttpDelete("GoogleAccount"), Authorize]
+        [HttpDelete("GoogleAccount")]
+        [Authorize(Roles = "DeleteContact")]
         public IActionResult DeleGoogleAccount([FromBody] DeleteGoogleAccountRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
