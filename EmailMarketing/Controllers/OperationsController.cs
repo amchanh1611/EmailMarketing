@@ -19,7 +19,8 @@ namespace EmailMarketing.Controllers
             this.services = services;
             this.backgroundJobClient = backgroundJobClient;
         }
-        [HttpGet, Authorize]
+        [HttpGet]
+        [Authorize(Roles = "ViewOperation")]
         public IActionResult Get([FromQuery] GetOperationRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -28,7 +29,8 @@ namespace EmailMarketing.Controllers
             return Ok(services.Get(userId, request));
         }
 
-        [HttpGet("Operation/{operationId}/Content"), Authorize]
+        [HttpGet("Operation/{operationId}/Content")]
+        [Authorize(Roles = "ViewOperation")]
         public IActionResult ContentOfOperation([FromRoute] int operationId)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -37,7 +39,8 @@ namespace EmailMarketing.Controllers
             return Ok(services.ContentOfOperation(userId, operationId));
         }
 
-        [HttpPost, Authorize]
+        [HttpPost]
+        [Authorize(Roles = "CreateOperation")]
         public async Task<IActionResult> CreateAsync([FromForm] CreateOperationRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -49,12 +52,15 @@ namespace EmailMarketing.Controllers
 
             services.CreateOperationDetail(operation.Id);
 
-            string jobId = backgroundJobClient.Schedule(() => services.SendMailAsync(operation.Id), date); 
+            string jobId = backgroundJobClient.Schedule(() => services.SendMailAsync(operation.Id), date);
 
-            return Ok(jobId);
+            services.UpdateJobId(operation.Id, jobId);
+
+            return Ok();
         }
 
         [HttpGet("ReloadSendMail/{operationId}")]
+        [Authorize(Roles = "CreateOperation")]
         public async Task<IActionResult> ReloadSendMailAsync([FromRoute] int operationId)
         {
             await services.SendMailAsync(operationId);
@@ -62,19 +68,26 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpGet("OperationDetail/{operationId}")]
+        [Authorize(Roles = "ViewOperation")]
         public IActionResult GetOperationDetail([FromRoute] int operationId, [FromQuery] GetOperationDetailRequest request)
         {
             return Ok(services.GetOperationDetail(operationId, request));
         }
         [HttpPut("Operation/{operationId}")]
-        public IActionResult Update([FromRoute] int operationId,[FromQuery] string jobId, [FromBody] UpdateOperationRequest request)
+        [Authorize(Roles = "UpdateOperation")]
+        public IActionResult Update([FromRoute] int operationId, [FromBody] UpdateOperationRequest request)
         {
-            backgroundJobClient.Delete(jobId);
+            DateTimeOffset date = request.DateSend!.Value;
 
-            services.Update(operationId, request);
+            Operation operation = services.Update(operationId, request);
+
+            string jobId = backgroundJobClient.Schedule(() => services.SendMailAsync(operation.Id), date);
+
+            services.UpdateJobId(operation.Id, jobId);
             return Ok();
         }
         [HttpDelete]
+        [Authorize(Roles = "DeleteOperation")]
         public IActionResult Delete([FromBody] DeleteOperationRequest request)
         {
             services.Delete(request);

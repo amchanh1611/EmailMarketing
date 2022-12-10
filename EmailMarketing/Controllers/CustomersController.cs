@@ -20,6 +20,7 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "CreateCustommer")]
         public IActionResult Create([FromBody] CreateCustomerRequest request)
         {
             customerServices.Create(request);
@@ -27,6 +28,7 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "ViewCustommer")]
         public IActionResult GetUser([FromQuery] GetUserRequest request)
         {
             return Ok(userServices.Get(request));
@@ -41,6 +43,7 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpGet("{userId}")]
+        [Authorize(Roles = "ViewCustommer")]
         public IActionResult GetDetail([FromRoute] int userId)
         {
             HttpContext context = HttpContext;
@@ -48,6 +51,7 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpDelete("{userId}")]
+        [Authorize(Roles = "DeleteCustommer")]
         public IActionResult Delete([FromRoute] int userId)
         {
             userServices.Delete(userId);
@@ -55,7 +59,8 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpPut("{userId}")]
-        public IActionResult UpdateUser([FromRoute] int userId, [FromBody] UpdateCustomerRequest request)
+        [Authorize(Roles = "UpdateCustommer")]
+        public IActionResult UpdateCustomer([FromRoute] int userId, [FromBody] UpdateCustomerRequest request)
         {
             customerServices.Update(userId, request);
             return Ok();

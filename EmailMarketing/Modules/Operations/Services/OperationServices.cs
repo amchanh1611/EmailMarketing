@@ -13,6 +13,7 @@ using EmailMarketing.Modules.Projects.Services;
 using EmailMarketing.Modules.Users.Entities;
 using EmailMarketing.Modules.Users.Services;
 using EmailMarketing.Persistences.Repositories;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
 namespace EmailMarketing.Modules.Operations.Services
@@ -23,8 +24,9 @@ namespace EmailMarketing.Modules.Operations.Services
         void UpdateStatus(int operationId, OperationStatus status);
         Task SendMailAsync(int operationId);
         void CreateOperationDetail(int operationId);
-        void Update(int operationId, UpdateOperationRequest request);
+        Operation Update(int operationId, UpdateOperationRequest request);
         void Delete(DeleteOperationRequest request);
+        void UpdateJobId(int operationId, string jobId);
         GetOperationDetailResponse GetOperationDetail(int operationId, GetOperationDetailRequest request);
         PaggingResponse<GetOperationResponse> Get(int userId, GetOperationRequest request);
         GetContentOperationResponse ContentOfOperation(int userId, int operationId);
@@ -37,7 +39,8 @@ namespace EmailMarketing.Modules.Operations.Services
         private readonly IGoogleServices googleServices;
         private readonly IProjectServices projectServices;
         private readonly IMapper mapper;
-        public OperationServices(IRepositoryWrapper repository, IMapper mapper, IGroupContactServices groupContactServices, IUserServices userServices, IGoogleServices googleServices, IProjectServices projectServices)
+        private readonly IBackgroundJobClient backgroundJobClient;
+        public OperationServices(IRepositoryWrapper repository, IMapper mapper, IGroupContactServices groupContactServices, IUserServices userServices, IGoogleServices googleServices, IProjectServices projectServices, IBackgroundJobClient backgroundJobClient)
         {
             this.repository = repository;
             this.mapper = mapper;
@@ -45,6 +48,7 @@ namespace EmailMarketing.Modules.Operations.Services
             this.userServices = userServices;
             this.googleServices = googleServices;
             this.projectServices = projectServices;
+            this.backgroundJobClient = backgroundJobClient;
         }
 
         public GetContentOperationResponse ContentOfOperation(int userId, int operationId)
@@ -89,6 +93,12 @@ namespace EmailMarketing.Modules.Operations.Services
         public void Delete(DeleteOperationRequest request)
         {
             List<Operation> operations = repository.Operation.FindByCondition(x => request.OperationIds!.Contains(x.Id)).ToList();
+
+            foreach(Operation operation in operations)
+            {
+                backgroundJobClient.Delete(operation.JobId);
+            }
+
             repository.Operation.DeleteMulti(operations);
             repository.Save();
         }
@@ -174,10 +184,22 @@ namespace EmailMarketing.Modules.Operations.Services
             UpdateStatus(operationId, operationDetails.Any(x => x.Status == OperationStatus.Fail) ? OperationStatus.Fail : OperationStatus.Complete);
         }
 
-        public void Update(int operationId, UpdateOperationRequest request)
+        public Operation Update(int operationId, UpdateOperationRequest request)
         {
             Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
+
+            backgroundJobClient.Delete(operation!.JobId);
+
             repository.Operation.Update(mapper.Map(request, operation!));
+            repository.Save();
+            return operation!;
+        }
+
+        public void UpdateJobId(int operationId, string jobId)
+        {
+            Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
+
+            operation!.JobId = jobId;
             repository.Save();
         }
 

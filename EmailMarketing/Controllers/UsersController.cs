@@ -24,7 +24,7 @@ namespace EmailMarketing.Controllers
             this.googleServices = googleServices;
         }
         [HttpPost]
-        [Authorize(Roles ="UpdateAccount")]
+        [Authorize(Roles ="CreateAccount")]
         public IActionResult Create([FromBody] CreateUserRequest request)
         {
             userServices.Create(request);

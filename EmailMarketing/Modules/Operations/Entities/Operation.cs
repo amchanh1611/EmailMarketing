@@ -18,6 +18,7 @@ namespace EmailMarketing.Modules.Operations.Entities
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public int UserId { get; set; }
         public OperationStatus Status { get; set; } = OperationStatus.WaitProcessing;
+        public string? JobId { get; set; }
         public User User { get; set; } = default!;
         public Project Project { get; set; } = default!;
         public GoogleAccount GoogleAccount { get; set; } = default!;

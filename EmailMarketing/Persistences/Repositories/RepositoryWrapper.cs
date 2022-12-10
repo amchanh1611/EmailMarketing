@@ -132,11 +132,11 @@ namespace EmailMarketing.Persistences.Repositories
         {
             get
             {
-                if (this.role is null)
+                if (role is null)
                 {
-                    this.role = new RoleRepository(context);
+                    role = new RoleRepository(context);
                 }
-                return this.role;
+                return role;
             }
         }
 
