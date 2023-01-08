@@ -139,13 +139,13 @@ namespace EmailMarketing.Modules.Roles.Services
 
                 List<string> permissionOfRole = role.RolePermissions.Select(x => x.PermissionCode).ToList();
 
+                List<string> lstRemove = permissionOfRole.Except(request.PermissionCodes!).ToList();
+
+                repository.RolePermission.DeleteMulti(lstRemove.Select(x => new RolePermission { RoleId = role!.Id, PermissionCode = x }).ToList());
+
                 List<string> lstAdd = request.PermissionCodes!.Except(permissionOfRole).ToList();
 
                 repository.RolePermission.CreateMulti(lstAdd.Select(x => new RolePermission { RoleId = role!.Id, PermissionCode = x }).ToList());
-
-                List<string> lstRemove = permissionOfRole.Except(request.PermissionCodes!).ToList();
-
-                repository.RolePermission.DeleteMulti(lstRemove.Select(x=> new RolePermission { RoleId= role!.Id,PermissionCode=x }).ToList());
 
                 repository.Save();
                 trans.Commit();

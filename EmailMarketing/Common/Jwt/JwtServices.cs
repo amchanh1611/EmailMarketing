@@ -26,17 +26,20 @@ namespace EmailMarketing.Common.JWT
 
         public string GenerateAccessToken(User user)
         {
+            List<Claim> claims = user.Role!.RolePermissions.Select(x => new Claim(ClaimTypes.Role, x.PermissionCode)).ToList();
+            claims.AddRange(new List<Claim> 
+            {
+                new Claim("email", user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            });
+
             // generate token that is valid for 7 days
             JwtSecurityTokenHandler tokenHandler = new();
             byte[] key = Encoding.ASCII.GetBytes(appSettings!.Jwt!.AccessKey!);
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
                 Issuer = appSettings.Jwt.Issuer,
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim("email",user.Email),
-                    new Claim(ClaimTypes.NameIdentifier,user.Id.ToString())
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };

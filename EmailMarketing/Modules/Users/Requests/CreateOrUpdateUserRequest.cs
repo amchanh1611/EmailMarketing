@@ -6,24 +6,31 @@ using System.Security.Claims;
 
 namespace EmailMarketing.Modules.Users.Requests
 {
-    public class CreateOrUpdateUserRequest
+    public class CreateCustomerRequest : CreateOrUpdateUserBase
+    {
+        
+    }
+    public class CreateOrUpdateUserBase
     {
         public string? Email { get; set; }
         public string? Name { get; set; }
         public string? Password { get; set; }
         public string? Phone { get; set; }
         public UserMale? Male { get; set; }
+    }
+
+    public class CreateUserRequest : CreateOrUpdateUserBase
+    {
         public int? RoleId { get; set; }
     }
-
-    public class CreateUserRequest : CreateOrUpdateUserRequest
-    {
-    }
-
-    public class UpdateUser
+    public class UpdateCustomerRequest : UpdateUserRequest { }
+    public class UpdateUserBase 
     {
         public UserStatus? Status { get; set; }
         public string? Email { get; set; }
+    }
+    public class UpdateUserRequest : UpdateUserBase
+    {
         public int? RoleId { get; set; }
     }
     public class UpdateUserName
@@ -39,9 +46,9 @@ namespace EmailMarketing.Modules.Users.Requests
     {
         public IFormFile? File { get; set; }
     }
-    public class CreateOrUpdateUserRequestValidator : AbstractValidator<CreateOrUpdateUserRequest>
+    public class CreateOrUpdateUserValidator : AbstractValidator<CreateOrUpdateUserBase>
     {
-        public CreateOrUpdateUserRequestValidator(IRepositoryWrapper repository)
+        public CreateOrUpdateUserValidator(IRepositoryWrapper repository)
         {
             RuleFor(user => user.Email).NotEmpty().WithMessage("{PropertyName} is required")
                 .EmailAddress().WithMessage("{PropertyName} is not valid")
@@ -57,11 +64,6 @@ namespace EmailMarketing.Modules.Users.Requests
                 .Matches("[a-z]").WithMessage("{PropertyName} must contain at least one lowercase letter.")
                 .Matches("[0-9]").WithMessage("{PropertyName} must contain at least one number.")
                 .Matches(@"[""!@$%^&*(){}:;<>,.?/+\-_=|'[\]~\\]").WithMessage("{PropertyName} must contain at least one special character");
-            RuleFor(user => user.RoleId).NotEmpty()
-                .NotEqual(0)
-                .WithMessage("{PropertyName} is required")
-                .Must((_, RoleId) => { return repository.Role.FindByCondition(x => x.Id == RoleId).Count() != 0; })
-                .WithMessage("{PropertyName} does not exist");
         }
     }
 
@@ -69,11 +71,26 @@ namespace EmailMarketing.Modules.Users.Requests
     {
         public CreateUserRequestValidator(IRepositoryWrapper repository)
         {
-            RuleFor(user => user).SetValidator(new CreateOrUpdateUserRequestValidator(repository));
+            RuleFor(user => user).SetValidator(new CreateOrUpdateUserValidator(repository));
+            RuleFor(user => user.RoleId).NotEmpty().WithMessage("{PropertyName} is required")
+                .Must((_, RoleId) => { return repository.Role.FindByCondition(x => x.Id == RoleId).Count() != 0; })
+                .WithMessage("{PropertyName} does not exist");
         }
     }
 
-    public class UpdateUserValidator : AbstractValidator<UpdateUser>
+    public class UpdateUserRequestValidator : AbstractValidator<UpdateUserRequest>
+    {
+        public UpdateUserRequestValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
+        {
+            RuleFor(x => x).SetValidator(new UpdateUserValidator(repository, httpContextAccessor));
+            RuleFor(user => user.RoleId).NotNull().NotEqual(0).WithMessage("{PropertyName} is required")
+                .Must((_, roleId) =>
+                {
+                    return repository.Role.FindByCondition(x => x.Id == roleId).Any();
+                });
+        }
+    }
+    public class UpdateUserValidator : AbstractValidator<UpdateUserBase>
     {
         public UpdateUserValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
         {
@@ -89,11 +106,6 @@ namespace EmailMarketing.Modules.Users.Requests
                   x.Id != userId)
                   .Any();
               }).WithMessage("{PropertyName} already exists");
-            RuleFor(user => user.RoleId).NotNull().NotEqual(0).WithMessage("{PropertyName} is required")
-                .Must((_, roleId) =>
-                {
-                    return repository.Role.FindByCondition(x => x.Id == roleId).Any();
-                });
         }
     }
     public class UpdateUserNameValidator : AbstractValidator<UpdateUserName>
@@ -127,6 +139,20 @@ namespace EmailMarketing.Modules.Users.Requests
         public UpdateUserAvatarValidator()
         {
             RuleFor(user=>user.File).NotEmpty().WithMessage("{PropertyName} is required");
+        }
+    }
+    public class CreateCustomerValidator : AbstractValidator<CreateCustomerRequest>
+    {
+        public CreateCustomerValidator(IRepositoryWrapper repository)
+        {
+            RuleFor(x => x).SetValidator(new CreateOrUpdateUserValidator(repository));
+        }
+    }
+    public class UpdateCustommerValidator : AbstractValidator<UpdateCustomerRequest>
+    {
+        public UpdateCustommerValidator(IRepositoryWrapper repository, IHttpContextAccessor httpContextAccessor)
+        {
+            RuleFor(x => x).SetValidator(new UpdateUserValidator(repository, httpContextAccessor));
         }
     }
 }

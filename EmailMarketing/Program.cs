@@ -88,6 +88,7 @@ builder.Services.AddScoped<IGroupContactServices, GroupContactServices>();
 builder.Services.AddScoped<IContactServices, ContactServices>();
 builder.Services.AddScoped<IGoogleServices, GoogleService>();
 builder.Services.AddScoped<IOperationServices, OperationServices>();
+builder.Services.AddScoped<ICustomerServices, CustomerServices>();
 
 //Appsettings
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
@@ -122,7 +123,6 @@ builder.Services.AddAuthentication(option =>
             ClockSkew = TimeSpan.Zero,
         };
     });
-
 
 var app = builder.Build();
 

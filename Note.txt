@@ -1,9 +1,22 @@
-// sửa refreshtoken truyền vào token VVVV
-// thêm gửi file VVV trong body da co file ma gui qua khong co
-// whitelist token xóa  VVVV
-// thêm update and xóa chiến dịch (hủy job) status 4 trạng thái VVVV
-// getdetail operation detail VVVV
-// phân quyền
+//UpdateRole error tracking when delete
 
+// redis
+la gi??
+dung khi nao?? 
 
-// anh review code cua em luon con phan quyen review sau 
+{
+  "name": "Khách hàng",
+  "userType": 3,
+  "permissionCodes": [
+    "CreateContact","CreateOperation","DeleteContact","DeleteOperation","	
+UpdateContact","UpdateOperation","ViewContact","ViewOperation","ViewPersonalProject"
+  ]
+}
+
+{
+  "name": "Nhân Viên",
+  "userType": 2,
+  "permissionCodes": [ "CreateAccount","CreateCustommer","CreateProject","CreateRole","CreateServicePackage","DeleteAccount","DeleteCustommer","DeleteProject","DeleteRole","DeleteServicePackage","UpdateAccount",
+"UpdateCustommer","UpdateProject","UpdateRole","UpdateServicePackage","ViewAccount","ViewCustommer","ViewProject","ViewRole","ViewServicePackage"
+  ]
+}

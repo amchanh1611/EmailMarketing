@@ -15,8 +15,6 @@ using EmailMarketing.Modules.Users.Services;
 using EmailMarketing.Persistences.Repositories;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Text;
 
 namespace EmailMarketing.Modules.Operations.Services
 {
@@ -26,8 +24,9 @@ namespace EmailMarketing.Modules.Operations.Services
         void UpdateStatus(int operationId, OperationStatus status);
         Task SendMailAsync(int operationId);
         void CreateOperationDetail(int operationId);
-        void Update(int operationId, UpdateOperationRequest request);
+        Operation Update(int operationId, UpdateOperationRequest request);
         void Delete(DeleteOperationRequest request);
+        void UpdateJobId(int operationId, string jobId);
         GetOperationDetailResponse GetOperationDetail(int operationId, GetOperationDetailRequest request);
         PaggingResponse<GetOperationResponse> Get(int userId, GetOperationRequest request);
         GetContentOperationResponse ContentOfOperation(int userId, int operationId);
@@ -40,7 +39,8 @@ namespace EmailMarketing.Modules.Operations.Services
         private readonly IGoogleServices googleServices;
         private readonly IProjectServices projectServices;
         private readonly IMapper mapper;
-        public OperationServices(IRepositoryWrapper repository, IMapper mapper, IGroupContactServices groupContactServices, IUserServices userServices, IGoogleServices googleServices, IProjectServices projectServices)
+        private readonly IBackgroundJobClient backgroundJobClient;
+        public OperationServices(IRepositoryWrapper repository, IMapper mapper, IGroupContactServices groupContactServices, IUserServices userServices, IGoogleServices googleServices, IProjectServices projectServices, IBackgroundJobClient backgroundJobClient)
         {
             this.repository = repository;
             this.mapper = mapper;
@@ -48,6 +48,7 @@ namespace EmailMarketing.Modules.Operations.Services
             this.userServices = userServices;
             this.googleServices = googleServices;
             this.projectServices = projectServices;
+            this.backgroundJobClient = backgroundJobClient;
         }
 
         public GetContentOperationResponse ContentOfOperation(int userId, int operationId)
@@ -84,7 +85,7 @@ namespace EmailMarketing.Modules.Operations.Services
             Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
             List<Contact> contacts = groupContactServices.GetDetail(operation!.UserId, operation.GroupContactId).Contacts.ToList();
             List<OperationDetail> entities = contacts.Select(x => new OperationDetail { ContactId = x.Id, OperationId = operationId }).ToList();
-            
+
             repository.OperationDetail.CreateMulti(entities);
             repository.Save();
         }
@@ -92,6 +93,12 @@ namespace EmailMarketing.Modules.Operations.Services
         public void Delete(DeleteOperationRequest request)
         {
             List<Operation> operations = repository.Operation.FindByCondition(x => request.OperationIds!.Contains(x.Id)).ToList();
+
+            foreach(Operation operation in operations)
+            {
+                backgroundJobClient.Delete(operation.JobId);
+            }
+
             repository.Operation.DeleteMulti(operations);
             repository.Save();
         }
@@ -123,7 +130,6 @@ namespace EmailMarketing.Modules.Operations.Services
             return new GetOperationDetailResponse
             {
                 Complete = entities.Count(x => x.Status == OperationStatus.Complete),
-                WaitProcessing= entities.Count(x=>x.Status == OperationStatus.WaitProcessing),
                 Processing = entities.Count(x => x.Status == OperationStatus.Processing),
                 Fail = entities.Count(x => x.Status == OperationStatus.Fail),
                 OperationDetail = entities.ApplySearch(request.InfoSearch!).ApplySort(request.Orderby).ApplyPagging(request.Current, request.PageSize)
@@ -133,29 +139,26 @@ namespace EmailMarketing.Modules.Operations.Services
         public async Task SendMailAsync(int operationId)
         {
             Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId)
-                .Include(x=>x.OperationDetails).ThenInclude(x=>x.Contact).FirstOrDefault();
+                .Include(x => x.OperationDetails).ThenInclude(x => x.Contact).FirstOrDefault();
             operation!.Status = OperationStatus.Processing;
             repository.Save();
 
             GoogleAccount googleAccount = userServices.GetDetailGoogleAccount(operation!.UserId, operation.GoogleAccountId);
             List<OperationDetail> operationDetails = operation.OperationDetails.ToList();
+
             foreach (OperationDetail operationDetail in operationDetails)
             {
                 if (operationDetail.Status == OperationStatus.Complete)
                     continue;
-
-                operationDetail.Status = OperationStatus.Processing;
-                operationDetail.StatusMessage = "Processing";
-                repository.Save();
 
                 string male = operationDetail.Contact.Male == ContactMale.Male ? "Anh" : "Chị";
 
                 string dynamicContent = operation.Content.Replace("[gender]", male, StringComparison.OrdinalIgnoreCase)
                     .Replace("[name]", operationDetail.Contact.Name, StringComparison.OrdinalIgnoreCase);
 
-                MemoryStream? fileContent = operation.FileContent is null ? null : await operation.FileContent!.ReadFile();
+                string? path = operation.FileContent is null ? null : Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", operation.FileContent);
 
-                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, dynamicContent, googleAccount.RefreshToken,fileContent!, operation.FileName!, operationDetail.Contact.Email);
+                bool? status = await googleServices.SendMailAsync(googleAccount.Email, operation.Subject, dynamicContent, googleAccount.RefreshToken, path!, operation.FileName!, operationDetail.Contact.Email);
 
                 if (status is null)
                 {
@@ -181,10 +184,22 @@ namespace EmailMarketing.Modules.Operations.Services
             UpdateStatus(operationId, operationDetails.Any(x => x.Status == OperationStatus.Fail) ? OperationStatus.Fail : OperationStatus.Complete);
         }
 
-        public void Update(int operationId, UpdateOperationRequest request)
+        public Operation Update(int operationId, UpdateOperationRequest request)
         {
             Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
+
+            backgroundJobClient.Delete(operation!.JobId);
+
             repository.Operation.Update(mapper.Map(request, operation!));
+            repository.Save();
+            return operation!;
+        }
+
+        public void UpdateJobId(int operationId, string jobId)
+        {
+            Operation? operation = repository.Operation.FindByCondition(x => x.Id == operationId).FirstOrDefault();
+
+            operation!.JobId = jobId;
             repository.Save();
         }
 

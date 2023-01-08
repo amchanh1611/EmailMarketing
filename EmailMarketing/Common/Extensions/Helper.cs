@@ -8,16 +8,20 @@ namespace EmailMarketing.Common.Extensions
 {
     public static class Helper
     {
-        public static MimeMessage CreateMimeMessage(this Message message,MemoryStream file,string fileName)
+        public static MimeMessage CreateMimeMessageAsync(this Message message, string path,string fileName)
         {
             MimeMessage emailMessage = new();
             emailMessage.From.Add(new MailboxAddress("EmailMarketing ", message.From));
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
-            BodyBuilder bodyBuilder = new BodyBuilder { HtmlBody = string.Format(message.Content) };
+            BodyBuilder bodyBuilder = new() { HtmlBody = string.Format(message.Content) };
 
-            if(file != null)
-                bodyBuilder.Attachments.Add(fileName, file);
+            if (path != null)
+            {
+                FileStream fileStream = File.OpenRead(path);
+                bodyBuilder.Attachments.Add(fileName,fileStream);
+            }
+                
 
             emailMessage.Body = bodyBuilder.ToMessageBody();
             return emailMessage;
@@ -36,13 +40,13 @@ namespace EmailMarketing.Common.Extensions
 
             return relativePath;
         }
-        public static async Task<MemoryStream> ReadFile(this string relativePath)
+        public static async Task<Stream> ReadFile(this string relativePath)
         {
             MemoryStream memoryStream = new();
 
             string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", relativePath);
 
-            using (Stream stream = new FileStream(absolutePath, FileMode.Open))
+            using (FileStream stream = File.OpenRead(absolutePath))
             {
                 await stream.CopyToAsync(memoryStream);
             }

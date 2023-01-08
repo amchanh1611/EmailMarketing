@@ -1,4 +1,5 @@
 ﻿using EmailMarketing.Persistences.Context;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace EmailMarketing.Common.RepositoriesBase
@@ -29,9 +30,9 @@ namespace EmailMarketing.Common.RepositoriesBase
 
         public void DeleteMulti(List<T> entities) => context.Set<T>().RemoveRange(entities);
 
-        public IQueryable<T> FindAll() => context.Set<T>();
+        public IQueryable<T> FindAll() => context.Set<T>().AsNoTracking();
 
-        public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression) => context.Set<T>().Where(expression);
+        public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression) => context.Set<T>().Where(expression).AsNoTracking();
 
         public T Update(T entity) => context.Set<T>().Update(entity).Entity;
     }

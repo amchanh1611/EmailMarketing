@@ -2,7 +2,7 @@
 using EmailMarketing.Modules.Projects.Request;
 using EmailMarketing.Modules.Projects.Services;
 using Hangfire;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -19,11 +19,13 @@ namespace EmailMarketing.Controllers
             this.projectServices = projectServices;
         }
         [HttpGet]
+        [Authorize(Roles = "ViewProject")]
         public IActionResult Get([FromQuery] GetProjectRequest request)
         {
             return Ok(projectServices.Get(request));
         }
         [HttpGet("User/Project")]
+        [Authorize(Roles = "ViewPersonalProject")]
         public IActionResult GetByUser([FromQuery] GetProjectRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -31,6 +33,7 @@ namespace EmailMarketing.Controllers
             return Ok(projectServices.GetByUser(userId, request));
         }
         [HttpPost]
+        [Authorize(Roles = "CreateProject")]
         public IActionResult Create([FromBody] CreateProjectRequest request)
         {
             Project project = projectServices.Create(request);
@@ -42,15 +45,17 @@ namespace EmailMarketing.Controllers
         }
 
         [HttpPut("{projectId}")]
+        [Authorize(Roles = "UpdateProject")]
         public IActionResult Update([FromRoute] int projectId, [FromBody] UpdateProjectRequest request)
         {
             projectServices.Update(projectId, request);
             return Ok();
         }
         [HttpDelete("{projectId}")]
+        [Authorize(Roles = "DeleteProject")]
         public IActionResult Delete([FromRoute] int projectId, [FromBody] DeleteProjectRequest request)
         {
-            projectServices.Delete(projectId,request);
+            projectServices.Delete(projectId, request);
             return Ok();
         }
     }

@@ -17,14 +17,16 @@ namespace EmailMarketing.Controllers
         {
             this.services = services;
         }
-        [HttpGet, Authorize]
+        [HttpGet]
+        [Authorize(Roles = "ViewContact")]
         public IActionResult Get([FromQuery] GetContactRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
             int userId = int.Parse(claim!.Value);
             return Ok(services.Get(userId, request));
         }
-        [HttpPost, Authorize]
+        [HttpPost]
+        [Authorize(Roles = "CreateContact")]
         public IActionResult Create([FromBody] CreateContactRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -32,7 +34,8 @@ namespace EmailMarketing.Controllers
             services.Create(userId, request);
             return Ok();
         }
-        [HttpPost("Excel"), Authorize]
+        [HttpPost("Excel")]
+        [Authorize(Roles = "CreateContact")]
         public IActionResult CreateByExcel([FromForm] CreateContactByExcelRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -40,7 +43,8 @@ namespace EmailMarketing.Controllers
             services.CreateByExcel(userId, request);
             return Ok();
         }
-        [HttpDelete, Authorize]
+        [HttpDelete]
+        [Authorize(Roles = "DeleteContact")]
         public IActionResult Delete([FromBody] DeleteContactRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -49,6 +53,7 @@ namespace EmailMarketing.Controllers
             return Ok();
         }
         [HttpGet("GroupContact/{groupId}/Contact")]
+        [Authorize(Roles = "ViewContact")]
         public IActionResult ContactOfGroup([FromRoute] int groupId, [FromQuery] GetContactInGroupRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
@@ -56,6 +61,7 @@ namespace EmailMarketing.Controllers
             return Ok(services.ContactInGroup(userId, groupId, request));
         }
         [HttpPut("{contactId}")]
+        [Authorize(Roles = "UpdateContact")]
         public IActionResult Update([FromRoute] int contactId,[FromBody] UpdateContactRequest request)
         {
             Claim? claim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
